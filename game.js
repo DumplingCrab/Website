@@ -100,12 +100,6 @@ let enemies = [];
 function movePlayer(dt) {
     const speed = is_sprinting ? player_speed * SPRINT_MULTIPLIER : player_speed;
     const movement = speed * dt;
-    const keys = {
-        up: false,
-        down: false,
-        left: false,
-        right: false,
-    };
     if (keys['up']) player_y -= movement;
     if (keys['down']) player_y += movement;
     if (keys['left']) player_x -= movement;
@@ -152,10 +146,11 @@ function renderWorld() {
 
     // Draw Player
     ctx.fillStyle = COLOR_PLAYER;
-    ctx.fillRect(canvas.width / 2 - PLAYER_SIZE / 2, canvas.height / 2 - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE);
+    ctx.fillRect(player_x, player_y, PLAYER_SIZE, PLAYER_SIZE);
 }
 
 // Event Listeners for Movement
+let keys = { up: false, down: false, left: false, right: false };
 document.addEventListener('keydown', (e) => {
     if (e.key === 'w') keys['up'] = true;
     if (e.key === 's') keys['down'] = true;
