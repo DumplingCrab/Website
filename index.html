@@ -39,6 +39,7 @@
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
         let playerPath = []; // To store player's past positions
         let playerMoved = false; // Flag to check if the player has moved
+        let enemyInterval;
 
         function setupMaze() {
             // Parse the input values and round them to the nearest odd number
@@ -55,8 +56,11 @@
                 height++;
             }
 
-            // Reset the enemy position
+            // Reset the enemy position and clear any ongoing enemy movement interval
             enemyPos = null;
+            if (enemyInterval) {
+                clearInterval(enemyInterval);
+            }
             playerMoved = false;
 
             // Update the grid template for maze size
@@ -138,6 +142,7 @@
                 // Check if player and enemy occupy the same cell
                 if (enemyPos && playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
                     alert("You Lose!");
+                    clearInterval(enemyInterval); // Stop the enemy movement
                     return; // Stop further player movement
                 }
 
@@ -148,7 +153,7 @@
                 if (!playerMoved) {
                     enemyPos = { x: 1, y: 2 }; // Initial enemy position after first move
                     playerMoved = true; // Set the flag to true after the first move
-                    moveEnemy(); // Move the enemy at the same time as the player
+                    enemyInterval = setInterval(moveEnemy, 500); // Start moving the enemy
                 }
             }
         }
@@ -162,6 +167,7 @@
                 // Check if player and enemy occupy the same cell
                 if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
                     alert("You Lose!");
+                    clearInterval(enemyInterval); // Stop the enemy movement
                 }
 
                 drawMaze();
