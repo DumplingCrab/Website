@@ -25,7 +25,7 @@
     <p>Use WASD or Arrow Keys to Move</p>
     <div class="maze" id="maze"></div>
     <script>
-        const size = 10;
+        const size = 15;
         let maze = Array(size).fill().map(() => Array(size).fill("#"));
         let playerPos = { x: 1, y: 1 };
         let exitPos = { x: size - 2, y: size - 2 };
@@ -47,6 +47,13 @@
             }
             maze[1][1] = " ";
             carve(1, 1);
+            
+            // Ensure there's a path to the exit
+            maze[exitPos.y][exitPos.x] = " ";
+            maze[exitPos.y - 1][exitPos.x] = " ";
+            maze[exitPos.y][exitPos.x - 1] = " ";
+            maze[exitPos.y - 1][exitPos.x - 1] = " ";
+            
             maze[exitPos.y][exitPos.x] = "E";
         }
         
