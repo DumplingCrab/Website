@@ -56,6 +56,13 @@
                 height++;
             }
 
+            // Reset the enemy position and clear any ongoing enemy movement interval
+            enemyPos = null;
+            if (enemyInterval) {
+                clearInterval(enemyInterval);
+            }
+            playerMoved = false;
+
             // Update the grid template for maze size
             document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
@@ -63,7 +70,6 @@
             // Initialize positions and move count
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            enemyPos = null; // Initially set to null
             moveCount = 0;
             playerPath = [];
             
