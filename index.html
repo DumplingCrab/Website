@@ -22,6 +22,7 @@
         .wall { background: black; }
         .player { background: blue; }
         .exit { background: green; }
+        .enemy { background: red; }
     </style>
 </head>
 <body>
@@ -35,7 +36,8 @@
     </div>
     <script>
         let width = 80, height = 30;
-        let maze, playerPos, exitPos;
+        let maze, playerPos, exitPos, enemyPos = null;
+        let moveCount = 0;
 
         function setupMaze() {
             width = parseInt(document.getElementById("mazeWidth").value);
@@ -44,6 +46,8 @@
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
+            enemyPos = null;
+            moveCount = 0;
             generateMaze();
             drawMaze();
         }
@@ -81,6 +85,7 @@
                     if (cell === "#") div.classList.add("wall");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
+                    if (enemyPos && x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
                     mazeElement.appendChild(div);
                 });
             });
@@ -100,9 +105,22 @@
             const newY = playerPos.y + dy;
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
+                moveCount++;
+                if (moveCount === 5) {
+                    enemyPos = { x: exitPos.x, y: exitPos.y };
+                }
+                if (enemyPos) moveEnemy();
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
             }
+        }
+
+        function moveEnemy() {
+            if (!enemyPos) return;
+            let dx = Math.sign(playerPos.x - enemyPos.x);
+            let dy = Math.sign(playerPos.y - enemyPos.y);
+            if (maze[enemyPos.y + dy][enemyPos.x] !== "#") enemyPos.y += dy;
+            else if (maze[enemyPos.y][enemyPos.x + dx] !== "#") enemyPos.x += dx;
         }
 
         document.addEventListener("keydown", (e) => {
