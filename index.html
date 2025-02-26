@@ -17,8 +17,6 @@
         .maze {
             display: grid;
             position: absolute;
-            grid-template-columns: repeat(80, 20px);
-            grid-template-rows: repeat(30, 20px);
         }
         .cell { width: 20px; height: 20px; background: white; border: 1px solid black; }
         .wall { background: black; }
@@ -29,23 +27,34 @@
 <body>
     <h1>Maze Game</h1>
     <p>Use WASD or Arrow Keys to Move</p>
+    <label>Width: <input type="number" id="mazeWidth" value="80"></label>
+    <label>Height: <input type="number" id="mazeHeight" value="30"></label>
+    <button onclick="setupMaze()">Generate</button>
     <div class="maze-container">
         <div class="maze" id="maze"></div>
     </div>
     <script>
-        const width = 80, height = 30;
-        let maze = Array.from({ length: height }, () => Array(width).fill("#"));
-        let playerPos = { x: 1, y: 1 };
-        let exitPos = { x: width - 2, y: height - 2 };
-        
+        let width = 80, height = 30;
+        let maze, playerPos, exitPos;
+
+        function setupMaze() {
+            width = parseInt(document.getElementById("mazeWidth").value);
+            height = parseInt(document.getElementById("mazeHeight").value);
+            document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
+            document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
+            playerPos = { x: 1, y: 1 };
+            exitPos = { x: width - 2, y: height - 2 };
+            generateMaze();
+            drawMaze();
+        }
+
         function generateMaze() {
+            maze = Array.from({ length: height }, () => Array(width).fill("#"));
             let stack = [[1, 1]];
             maze[1][1] = " ";
             while (stack.length) {
                 let [x, y] = stack[stack.length - 1];
-                let directions = [
-                    [0, -2], [0, 2], [-2, 0], [2, 0]
-                ].sort(() => Math.random() - 0.5);
+                let directions = [[0, -2], [0, 2], [-2, 0], [2, 0]].sort(() => Math.random() - 0.5);
                 let moved = false;
                 for (let [dx, dy] of directions) {
                     let nx = x + dx, ny = y + dy;
@@ -61,7 +70,7 @@
             }
             maze[exitPos.y][exitPos.x] = "E";
         }
-        
+
         function drawMaze() {
             const mazeElement = document.getElementById("maze");
             mazeElement.innerHTML = "";
@@ -77,7 +86,7 @@
             });
             updateCamera();
         }
-        
+
         function updateCamera() {
             const mazeElement = document.getElementById("maze");
             const container = document.querySelector(".maze-container");
@@ -85,7 +94,7 @@
             const offsetY = Math.max(0, playerPos.y * 20 - container.clientHeight / 2);
             mazeElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
         }
-        
+
         function movePlayer(dx, dy) {
             const newX = playerPos.x + dx;
             const newY = playerPos.y + dy;
@@ -95,16 +104,15 @@
                 if (maze[newY][newX] === "E") alert("You Win!");
             }
         }
-        
+
         document.addEventListener("keydown", (e) => {
             if (e.key === "ArrowUp" || e.key === "w") movePlayer(0, -1);
             if (e.key === "ArrowDown" || e.key === "s") movePlayer(0, 1);
             if (e.key === "ArrowLeft" || e.key === "a") movePlayer(-1, 0);
             if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
         });
-        
-        generateMaze();
-        drawMaze();
+
+        setupMaze();
     </script>
 </body>
 </html>
