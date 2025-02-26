@@ -44,7 +44,7 @@
     </div>
     <script>
         let width, height, maze, playerPos, exitPos;
-        const rayCount = 8; // Number of rays for visibility
+        const rayCount = 180; // Number of rays for visibility
 
         function setupMaze() {
             width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
