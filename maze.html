@@ -17,6 +17,7 @@
         .maze {
             display: grid;
             position: absolute;
+            transition: transform 0.1s ease-in-out; /* Smooth transition for camera movement */
         }
         .cell {
             width: 20px; height: 20px;
@@ -45,6 +46,7 @@
     <script>
         let width, height, maze, playerPos, exitPos;
         const rayCount = 360; // Number of rays for visibility
+        const cellSize = 20; // Size of each cell
 
         function setupMaze() {
             width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
@@ -101,7 +103,7 @@
                 });
             });
             applyRaycasting();
-            
+            applyCameraTracking();
         }
 
         function applyRaycasting() {
@@ -113,7 +115,7 @@
                 let y = playerPos.y;
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
-                cells[(y*width+x)].classList.remove("hidden");
+                cells[(y * width + x)].classList.remove("hidden");
                 for (let i = 0; i < 10; i++) { // Limit how far the ray goes
                     x += dx;
                     y += dy;
@@ -131,6 +133,13 @@
                 let angle = (i / rayCount) * (Math.PI * 2);
                 castRay(angle);
             }
+        }
+
+        function applyCameraTracking() {
+            const mazeElement = document.getElementById("maze");
+            const cameraX = Math.max(0, Math.min(playerPos.x * cellSize - 200, (width * cellSize) - 400));
+            const cameraY = Math.max(0, Math.min(playerPos.y * cellSize - 150, (height * cellSize) - 300));
+            mazeElement.style.transform = `translate(-${cameraX}px, -${cameraY}px)`;
         }
 
         function movePlayer(dx, dy) {
