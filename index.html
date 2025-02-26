@@ -120,7 +120,7 @@
         }
 
         function moveEnemy() {
-            if (playerPath.length >= 6) {
+            if (playerPath.length >= 5) {
                 // The enemy follows the player's position 5 moves behind
                 enemyPos = playerPath[0]; // The enemy follows the 5th last position in the player's path
                 playerPath.shift(); // Remove the oldest position in the path
