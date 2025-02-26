@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Game with Fog of War</title>
+    <title>Maze Game with Raycasting</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
         .maze-container {
@@ -20,22 +20,21 @@
         }
         .cell {
             width: 20px; height: 20px;
-            background: black;
+            background: gray;
             border: 1px solid black;
-            transition: background 0.3s ease;
+            transition: background 0.2s ease;
         }
         .wall { background: black !important; }
         .floor { background: white; }
         .player { background: blue; }
         .exit { background: green; }
         .enemy { background: red; }
-        .hidden { background: black !important; }
+        .hidden { background: gray !important; }
     </style>
 </head>
 <body>
-    <h1>Maze Game V1.3 - Fog of War</h1>
+    <h1>Maze Game V1.4 - Raycasting Visibility</h1>
     <p>Use WASD or Arrow Keys to Move</p>
-    <p>The red block follows you around, 5 moves behind you, making backtracking harder</p>
     <p>Reach the green square in the bottom right</p>
     <label>Width: <input type="number" id="mazeWidth" value="81"></label>
     <label>Height: <input type="number" id="mazeHeight" value="31"></label>
@@ -44,19 +43,14 @@
         <div class="maze" id="maze"></div>
     </div>
     <script>
-        let width, height, maze, playerPos, exitPos, enemyPos, moveCount, playerPath, playerMoved, enemyInterval;
-        const visionRadius = 3; // Adjust to change how far the player can see
+        let width, height, maze, playerPos, exitPos;
+        const rayCount = 360; // Number of rays for visibility
 
         function setupMaze() {
             width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
             height = Math.max(5, parseInt(document.getElementById("mazeHeight").value) | 1);
-            enemyPos = null;
-            clearInterval(enemyInterval);
-            playerMoved = false;
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            moveCount = 0;
-            playerPath = [];
             document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             generateMaze();
@@ -89,22 +83,7 @@
                 }
             }
 
-            removeDeadEnds();
             maze[exitPos.y][exitPos.x] = "E";
-        }
-
-        function removeDeadEnds() {
-            for (let y = 1; y < height - 1; y += 2) {
-                for (let x = 1; x < width - 1; x += 2) {
-                    if (maze[y][x] === " ") {
-                        let neighbors = [[x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]].filter(([nx, ny]) => maze[ny] && maze[ny][nx] === "#");
-                        if (neighbors.length === 3) {
-                            let [wx, wy] = neighbors[Math.floor(Math.random() * neighbors.length)];
-                            maze[wy][wx] = " ";
-                        }
-                    }
-                }
-            }
         }
 
         function drawMaze() {
@@ -118,24 +97,38 @@
                     if (cell === " ") div.classList.add("floor");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
-                    if (enemyPos && x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
                     mazeElement.appendChild(div);
                 });
             });
-            revealFog();
-            updateCamera();
+            applyRaycasting();
         }
 
-        function revealFog() {
+        function applyRaycasting() {
             const cells = document.querySelectorAll(".cell");
             cells.forEach(cell => cell.classList.add("hidden"));
-            for (let y = -visionRadius; y <= visionRadius; y++) {
-                for (let x = -visionRadius; x <= visionRadius; x++) {
-                    let nx = playerPos.x + x, ny = playerPos.y + y;
-                    if (maze[ny] && maze[ny][nx] !== undefined) {
-                        cells[ny * width + nx].classList.remove("hidden");
+
+            function castRay(angle) {
+                let x = playerPos.x;
+                let y = playerPos.y;
+                let dx = Math.cos(angle);
+                let dy = Math.sin(angle);
+
+                for (let i = 0; i < 10; i++) { // Limit how far the ray goes
+                    x += dx;
+                    y += dy;
+                    let ix = Math.round(x);
+                    let iy = Math.round(y);
+                    if (maze[iy] && maze[iy][ix] !== undefined) {
+                        let index = iy * width + ix;
+                        cells[index].classList.remove("hidden");
+                        if (maze[iy][ix] === "#") break; // Stop if we hit a wall
                     }
                 }
+            }
+
+            for (let i = 0; i < rayCount; i++) {
+                let angle = (i / rayCount) * (Math.PI * 2);
+                castRay(angle);
             }
         }
 
@@ -143,28 +136,8 @@
             let newX = playerPos.x + dx, newY = playerPos.y + dy;
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
-                moveCount++;
-                playerPath.push({ ...playerPos });
-                if (playerPath.length > 5) playerPath.shift();
-                if (enemyPos && playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
-                    alert("You Lose!");
-                    clearInterval(enemyInterval);
-                    return;
-                }
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
-                if (!playerMoved) {
-                    enemyPos = { x: 1, y: 2 };
-                    playerMoved = true;
-                    enemyInterval = setInterval(moveEnemy, 500);
-                }
-            }
-        }
-
-        function moveEnemy() {
-            if (playerPath.length >= 5) {
-                enemyPos = playerPath.shift();
-                drawMaze();
             }
         }
 
