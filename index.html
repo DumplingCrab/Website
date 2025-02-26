@@ -27,7 +27,6 @@
             grid-template-rows: repeat(30, 20px);
             gap: 0px;
             position: relative;
-            transform-origin: 0 0;
         }
         .cell {
             width: 20px;
@@ -60,6 +59,7 @@
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
         let playerPath = []; // Array to store the player's path
 
+        // Initialize maze setup
         function setupMaze() {
             width = parseInt(prompt("Enter maze width:", 80));
             height = parseInt(prompt("Enter maze height:", 30));
@@ -74,6 +74,7 @@
             drawMaze();
         }
 
+        // Maze generation using a simple algorithm
         function generateMaze() {
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
             let stack = [[1, 1]];
@@ -97,6 +98,7 @@
             maze[exitPos.y][exitPos.x] = "E";
         }
 
+        // Drawing the maze and placing player and enemy
         function drawMaze() {
             const mazeElement = document.getElementById("maze");
             mazeElement.innerHTML = "";
@@ -114,14 +116,31 @@
             updateCamera();
         }
 
+        // Check if the player collides with the enemy
+        function checkCollision() {
+            if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
+                alert("Game Over! The enemy caught you!");
+                setupMaze(); // Restart the game after collision
+            }
+        }
+
+        // Update camera position to keep the player centered (if possible)
         function updateCamera() {
             const mazeElement = document.getElementById("maze");
             const container = document.querySelector(".maze-container");
-            const offsetX = Math.max(0, playerPos.x * 20 - container.clientWidth / 2);
-            const offsetY = Math.max(0, playerPos.y * 20 - container.clientHeight / 2);
+            const playerCenterX = playerPos.x * 20;
+            const playerCenterY = playerPos.y * 20;
+            const mazeWidth = width * 20;
+            const mazeHeight = height * 20;
+
+            // Calculate the best possible offset for centering the player
+            const offsetX = Math.max(0, Math.min(playerCenterX - container.clientWidth / 2, mazeWidth - container.clientWidth));
+            const offsetY = Math.max(0, Math.min(playerCenterY - container.clientHeight / 2, mazeHeight - container.clientHeight));
+
             mazeElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
         }
 
+        // Move the player based on the direction
         function movePlayer(dx, dy) {
             const newX = playerPos.x + dx;
             const newY = playerPos.y + dy;
@@ -141,10 +160,12 @@
                 }
 
                 drawMaze();
+                checkCollision(); // Check if player collides with the enemy
                 if (maze[newY][newX] === "E") alert("You Win!");
             }
         }
 
+        // Move the enemy to follow the player's path with a 5-move delay
         function moveEnemy() {
             if (!enemyPos) return;
             
@@ -164,6 +185,7 @@
             }
         }
 
+        // Key event listener to move the player
         document.addEventListener("keydown", (e) => {
             if (e.key === "ArrowUp" || e.key === "w") movePlayer(0, -1);
             if (e.key === "ArrowDown" || e.key === "s") movePlayer(0, 1);
@@ -171,6 +193,7 @@
             if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
         });
 
+        // Initial setup of the maze
         setupMaze();
     </script>
 </body>
