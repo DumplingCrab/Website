@@ -37,13 +37,13 @@
             background-color: #000;
         }
         .player {
-            background-color: red;
+            background-color: blue;
         }
         .exit {
             background-color: green;
         }
         .enemy {
-            background-color: blue;
+            background-color: red;
         }
         .cell {
             border: 1px solid #ccc;
@@ -135,13 +135,9 @@
                     enemyPos = { ...playerPath[0] }; // Enemy starts at the beginning of the player's path
                 }
 
-                // Move the enemy if it has been spawned
-                if (enemyPos) moveEnemy();
-                
-                // Check for backtracking (if the enemy is on the last player's position)
-                if (enemyPos && JSON.stringify(playerPath[moveCount]) === JSON.stringify(enemyPos)) {
-                    alert("Game Over! You backtracked!");
-                    return;
+                // Move the enemy after 5 moves
+                if (moveCount >= 5) {
+                    moveEnemy();
                 }
 
                 drawMaze();
@@ -152,8 +148,8 @@
         function moveEnemy() {
             if (!enemyPos) return;
             
-            // Follow the player's path (move enemy to the next position)
-            let targetPos = playerPath[moveCount];
+            // Enemy follows the player's path with a 5-move delay
+            let targetPos = playerPath[moveCount - 5]; // Enemy follows the path 5 moves behind
             let dx = targetPos.x - enemyPos.x;
             let dy = targetPos.y - enemyPos.y;
 
