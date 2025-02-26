@@ -109,14 +109,22 @@
                 moveCount++;
                 playerPath.push({ ...playerPos }); // Store the player's position
 
-                if (moveCount === 5) {
-                    // After 5 moves, move the enemy to the 5th last position of the player
-                    enemyPos = playerPath[0]; // The enemy follows the player's path with a delay
-                    playerPath.shift(); // Remove the oldest position in the path
+                // Remove the oldest position from the path if there are more than 5 positions
+                if (playerPath.length > 5) {
+                    playerPath.shift();
                 }
 
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
+            }
+        }
+
+        function moveEnemy() {
+            if (playerPath.length >= 5) {
+                // The enemy follows the player's position 5 moves behind
+                enemyPos = playerPath[0]; // The enemy follows the 5th last position in the player's path
+                playerPath.shift(); // Remove the oldest position in the path
+                drawMaze();
             }
         }
 
@@ -126,6 +134,9 @@
             if (e.key === "ArrowLeft" || e.key === "a") movePlayer(-1, 0);
             if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
         });
+
+        // Call moveEnemy every 500ms to update the enemy's position based on player path
+        setInterval(moveEnemy, 500);
 
         setupMaze();
     </script>
