@@ -88,7 +88,6 @@
 
         function drawMaze() {
             const mazeElement = document.getElementById("maze");
-            applyRaycasting();
             mazeElement.innerHTML = "";
             maze.forEach((row, y) => {
                 row.forEach((cell, x) => {
@@ -101,6 +100,7 @@
                     mazeElement.appendChild(div);
                 });
             });
+            applyRaycasting();
             
         }
 
