@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DumplingCrab Project: Maze Game</title>
+    <title>Maze Game with Fog of War</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
         .maze-container {
@@ -18,15 +18,22 @@
             display: grid;
             position: absolute;
         }
-        .cell { width: 20px; height: 20px; background: white; border: 1px solid black; }
-        .wall { background: black; }
+        .cell {
+            width: 20px; height: 20px;
+            background: black;
+            border: 1px solid black;
+            transition: background 0.3s ease;
+        }
+        .wall { background: black !important; }
+        .floor { background: white; }
         .player { background: blue; }
         .exit { background: green; }
         .enemy { background: red; }
+        .hidden { background: black !important; }
     </style>
 </head>
 <body>
-    <h1>Maze Game V1.2</h1>
+    <h1>Maze Game V1.3 - Fog of War</h1>
     <p>Use WASD or Arrow Keys to Move</p>
     <p>The red block follows you around, 5 moves behind you, making backtracking harder</p>
     <p>Reach the green square in the bottom right</p>
@@ -38,6 +45,7 @@
     </div>
     <script>
         let width, height, maze, playerPos, exitPos, enemyPos, moveCount, playerPath, playerMoved, enemyInterval;
+        const visionRadius = 3; // Adjust to change how far the player can see
 
         function setupMaze() {
             width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
@@ -81,9 +89,7 @@
                 }
             }
 
-            // Convert to a braid maze (removes dead ends)
             removeDeadEnds();
-
             maze[exitPos.y][exitPos.x] = "E";
         }
 
@@ -107,21 +113,30 @@
             maze.forEach((row, y) => {
                 row.forEach((cell, x) => {
                     const div = document.createElement("div");
-                    div.classList.add("cell");
+                    div.classList.add("cell", "hidden");
                     if (cell === "#") div.classList.add("wall");
+                    if (cell === " ") div.classList.add("floor");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
                     if (enemyPos && x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
                     mazeElement.appendChild(div);
                 });
             });
+            revealFog();
             updateCamera();
         }
 
-        function updateCamera() {
-            const mazeElement = document.getElementById("maze");
-            const container = document.querySelector(".maze-container");
-            mazeElement.style.transform = `translate(-${Math.max(0, playerPos.x * 20 - container.clientWidth / 2)}px, -${Math.max(0, playerPos.y * 20 - container.clientHeight / 2)}px)`;
+        function revealFog() {
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach(cell => cell.classList.add("hidden"));
+            for (let y = -visionRadius; y <= visionRadius; y++) {
+                for (let x = -visionRadius; x <= visionRadius; x++) {
+                    let nx = playerPos.x + x, ny = playerPos.y + y;
+                    if (maze[ny] && maze[ny][nx] !== undefined) {
+                        cells[ny * width + nx].classList.remove("hidden");
+                    }
+                }
+            }
         }
 
         function movePlayer(dx, dy) {
@@ -149,10 +164,6 @@
         function moveEnemy() {
             if (playerPath.length >= 5) {
                 enemyPos = playerPath.shift();
-                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
-                    alert("You Lose!");
-                    clearInterval(enemyInterval);
-                }
                 drawMaze();
             }
         }
