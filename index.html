@@ -38,6 +38,7 @@
         let width = 80, height = 30;
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
         let playerPath = []; // To store player's past positions
+        let enemyInterval;
 
         function setupMaze() {
             // Parse the input values and round them to the nearest odd number
@@ -53,7 +54,7 @@
             if (height % 2 === 0) {
                 height++;
             }
-        
+
             // Update the grid template for maze size
             document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
@@ -69,7 +70,6 @@
             generateMaze();
             drawMaze();
         }
-
 
         function generateMaze() {
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
@@ -132,6 +132,13 @@
                     playerPath.shift();
                 }
 
+                // Check if player and enemy occupy the same cell
+                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
+                    alert("You Lose!");
+                    clearInterval(enemyInterval); // Stop the enemy movement
+                    return; // Stop further player movement
+                }
+
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
             }
@@ -142,10 +149,18 @@
                 // The enemy follows the player's position 5 moves behind
                 enemyPos = playerPath[0]; // The enemy follows the 5th last position in the player's path
                 playerPath.shift(); // Remove the oldest position in the path
+
+                // Check if player and enemy occupy the same cell
+                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
+                    alert("You Lose!");
+                    clearInterval(enemyInterval); // Stop the enemy movement
+                }
+
                 drawMaze();
             }
         }
 
+        // Player controls
         document.addEventListener("keydown", (e) => {
             if (e.key === "ArrowUp" || e.key === "w") movePlayer(0, -1);
             if (e.key === "ArrowDown" || e.key === "s") movePlayer(0, 1);
@@ -154,7 +169,7 @@
         });
 
         // Call moveEnemy every 500ms to update the enemy's position based on player path
-        setInterval(moveEnemy, 500);
+        enemyInterval = setInterval(moveEnemy, 500);
 
         setupMaze();
     </script>
