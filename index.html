@@ -3,46 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Grid Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    <title>2D Maze Game</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        canvas { border: 2px solid black; }
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <h1>Multiplayer Grid Game</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <script>
-        const socket = io();
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const GRID_SIZE = 20;
-        const CELL_SIZE = canvas.width / GRID_SIZE;
-        let players = {};
+    <canvas id="gameCanvas"></canvas>
 
-        socket.on("player_data", (data) => {
-            players = data;
-            drawGrid();
-        });
-
-        function drawGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let id in players) {
-                let player = players[id];
-                ctx.fillStyle = player.color;
-                ctx.fillRect(player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-            }
-        }
-
-        document.addEventListener("keydown", (event) => {
-            let direction = null;
-            if (event.key === "ArrowUp") direction = "up";
-            else if (event.key === "ArrowDown") direction = "down";
-            else if (event.key === "ArrowLeft") direction = "left";
-            else if (event.key === "ArrowRight") direction = "right";
-            if (direction) socket.emit("move", { direction });
-        });
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>
