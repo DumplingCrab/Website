@@ -38,6 +38,7 @@
         let width = 80, height = 30;
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
         let playerPath = []; // To store player's past positions
+        let playerMoved = false; // Flag to check if the player has moved
         let enemyInterval;
 
         function setupMaze() {
@@ -62,7 +63,7 @@
             // Initialize positions and move count
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            enemyPos = { x: 1, y: 2 }; // Initial enemy position
+            enemyPos = null; // Initially set to null
             moveCount = 0;
             playerPath = [];
             
@@ -141,6 +142,13 @@
 
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
+
+                // Spawn the enemy after the first move
+                if (!playerMoved) {
+                    enemyPos = { x: 1, y: 2 }; // Initial enemy position after first move
+                    playerMoved = true; // Set the flag to true after the first move
+                    enemyInterval = setInterval(moveEnemy, 500); // Start moving the enemy
+                }
             }
         }
 
@@ -167,9 +175,6 @@
             if (e.key === "ArrowLeft" || e.key === "a") movePlayer(-1, 0);
             if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
         });
-
-        // Call moveEnemy every 500ms to update the enemy's position based on player path
-        enemyInterval = setInterval(moveEnemy, 500);
 
         setupMaze();
     </script>
