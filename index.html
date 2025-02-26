@@ -5,47 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maze Game</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
         .maze-container {
-            position: relative;
-            width: 400px;
-            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
-            border: 2px solid black;
-            margin: 20px auto;
         }
-        .maze {
+        #maze {
             display: grid;
-            position: absolute;
+            grid-template-columns: repeat(80, 20px);
+            grid-template-rows: repeat(30, 20px);
+            gap: 0px;
+            position: relative;
+            transform-origin: 0 0;
         }
-        .cell { width: 20px; height: 20px; background: white; border: 1px solid black; }
-        .wall { background: black; }
-        .player { background: blue; }
-        .exit { background: green; }
-        .enemy { background: red; }
+        .cell {
+            width: 20px;
+            height: 20px;
+        }
+        .wall {
+            background-color: #000;
+        }
+        .player {
+            background-color: red;
+        }
+        .exit {
+            background-color: green;
+        }
+        .enemy {
+            background-color: blue;
+        }
+        .cell {
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
-    <h1>Maze Game</h1>
-    <p>Use WASD or Arrow Keys to Move</p>
-    <label>Width: <input type="number" id="mazeWidth" value="80"></label>
-    <label>Height: <input type="number" id="mazeHeight" value="30"></label>
-    <button onclick="setupMaze()">Generate</button>
     <div class="maze-container">
-        <div class="maze" id="maze"></div>
+        <div id="maze"></div>
     </div>
+
     <script>
         let width = 80, height = 30;
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
+        let playerPath = []; // Array to store the player's path
 
         function setupMaze() {
-            width = parseInt(document.getElementById("mazeWidth").value);
-            height = parseInt(document.getElementById("mazeHeight").value);
+            width = parseInt(prompt("Enter maze width:", 80));
+            height = parseInt(prompt("Enter maze height:", 30));
             document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            enemyPos = { x: width - 3, y: height - 3 }; // Spawn enemy in a different location
+            enemyPos = null; // Don't spawn the enemy immediately
+            playerPath = [ { ...playerPos } ]; // Record the initial position of the player
             moveCount = 0;
             generateMaze();
             drawMaze();
@@ -84,7 +107,7 @@
                     if (cell === "#") div.classList.add("wall");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
-                    if (x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
+                    if (enemyPos && x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
                     mazeElement.appendChild(div);
                 });
             });
@@ -105,22 +128,41 @@
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
                 moveCount++;
-                if (moveCount === 5) enemyPos = { ...playerPos };
+                playerPath.push({ ...playerPos }); // Save the player's position
+
+                // Spawn the enemy after 5 moves
+                if (moveCount === 5) {
+                    enemyPos = { ...playerPath[0] }; // Enemy starts at the beginning of the player's path
+                }
+
+                // Move the enemy if it has been spawned
                 if (enemyPos) moveEnemy();
+                
+                // Check for backtracking (if the enemy is on the last player's position)
+                if (enemyPos && JSON.stringify(playerPath[moveCount]) === JSON.stringify(enemyPos)) {
+                    alert("Game Over! You backtracked!");
+                    return;
+                }
+
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
-                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) alert("Game Over!");
             }
         }
 
         function moveEnemy() {
             if (!enemyPos) return;
-            let dx = playerPos.x - enemyPos.x;
-            let dy = playerPos.y - enemyPos.y;
+            
+            // Follow the player's path (move enemy to the next position)
+            let targetPos = playerPath[moveCount];
+            let dx = targetPos.x - enemyPos.x;
+            let dy = targetPos.y - enemyPos.y;
+
             let moveX = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : 0;
             let moveY = moveX === 0 ? Math.sign(dy) : 0;
+            
             let newX = enemyPos.x + moveX;
             let newY = enemyPos.y + moveY;
+            
             if (maze[newY][newX] !== "#") {
                 enemyPos = { x: newX, y: newY };
             }
