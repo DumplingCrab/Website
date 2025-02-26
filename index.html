@@ -3,20 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Maze Game</title>
+    <title>Maze Game</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
+        body { text-align: center; font-family: Arial, sans-serif; }
+        .maze {
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            grid-template-rows: repeat(10, 40px);
+            gap: 2px;
+            margin: 20px auto;
+            width: max-content;
         }
-        canvas {
-            display: block;
-        }
+        .cell { width: 40px; height: 40px; background: white; border: 1px solid black; }
+        .wall { background: black; }
+        .player { background: blue; }
+        .exit { background: green; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-
-    <script src="game.js"></script>
+    <h1>Maze Game</h1>
+    <p>Use WASD or Arrow Keys to Move</p>
+    <div class="maze" id="maze"></div>
+    <script>
+        const mazeLayout = [
+            "##########",
+            "#P   #   #",
+            "# ## # # #",
+            "#    #   #",
+            "####### ##",
+            "#        #",
+            "# # ######",
+            "# #      #",
+            "# ###### #",
+            "#       E#"
+        ];
+        
+        const maze = document.getElementById("maze");
+        let playerPos = { x: 1, y: 1 };
+        
+        function drawMaze() {
+            maze.innerHTML = "";
+            mazeLayout.forEach((row, y) => {
+                [...row].forEach((cell, x) => {
+                    const div = document.createElement("div");
+                    div.classList.add("cell");
+                    if (cell === "#") div.classList.add("wall");
+                    if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
+                    if (cell === "E") div.classList.add("exit");
+                    maze.appendChild(div);
+                });
+            });
+        }
+        
+        function movePlayer(dx, dy) {
+            const newX = playerPos.x + dx;
+            const newY = playerPos.y + dy;
+            if (mazeLayout[newY][newX] !== "#") {
+                playerPos = { x: newX, y: newY };
+                drawMaze();
+                if (mazeLayout[newY][newX] === "E") alert("You Win!");
+            }
+        }
+        
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" || e.key === "w") movePlayer(0, -1);
+            if (e.key === "ArrowDown" || e.key === "s") movePlayer(0, 1);
+            if (e.key === "ArrowLeft" || e.key === "a") movePlayer(-1, 0);
+            if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
+        });
+        
+        drawMaze();
+    </script>
 </body>
 </html>
