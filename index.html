@@ -45,7 +45,7 @@
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            enemyPos = null;
+            enemyPos = { x: width - 3, y: height - 3 }; // Spawn enemy in a different location
             moveCount = 0;
             generateMaze();
             drawMaze();
@@ -84,7 +84,7 @@
                     if (cell === "#") div.classList.add("wall");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
-                    if (enemyPos && x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
+                    if (x === enemyPos.x && y === enemyPos.y) div.classList.add("enemy");
                     mazeElement.appendChild(div);
                 });
             });
@@ -109,6 +109,7 @@
                 if (enemyPos) moveEnemy();
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
+                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) alert("Game Over!");
             }
         }
 
