@@ -57,25 +57,48 @@
 
         function generateMaze() {
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
-            let stack = [[1, 1]];
-            maze[1][1] = " ";
-            while (stack.length) {
-                let [x, y] = stack[stack.length - 1];
-                let directions = [[0, -2], [0, 2], [-2, 0], [2, 0]].sort(() => Math.random() - 0.5);
-                let moved = false;
-                for (let [dx, dy] of directions) {
+            let walls = [];
+            function addWalls(x, y) {
+                [[0, -2], [0, 2], [-2, 0], [2, 0]].forEach(([dx, dy]) => {
                     let nx = x + dx, ny = y + dy;
-                    if (ny > 0 && ny < height - 1 && nx > 0 && nx < width - 1 && maze[ny][nx] === "#") {
-                        maze[ny][nx] = " ";
-                        maze[y + dy / 2][x + dx / 2] = " ";
-                        stack.push([nx, ny]);
-                        moved = true;
-                        break;
+                    if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] === "#") {
+                        walls.push([nx, ny, x, y]);
+                    }
+                });
+            }
+
+            maze[1][1] = " ";
+            addWalls(1, 1);
+
+            while (walls.length) {
+                let randIndex = Math.floor(Math.random() * walls.length);
+                let [x, y, px, py] = walls.splice(randIndex, 1)[0];
+
+                if (maze[y][x] === "#") {
+                    maze[y][x] = " ";
+                    maze[(y + py) / 2][(x + px) / 2] = " ";
+                    addWalls(x, y);
+                }
+            }
+
+            // Convert to a braid maze (removes dead ends)
+            removeDeadEnds();
+
+            maze[exitPos.y][exitPos.x] = "E";
+        }
+
+        function removeDeadEnds() {
+            for (let y = 1; y < height - 1; y += 2) {
+                for (let x = 1; x < width - 1; x += 2) {
+                    if (maze[y][x] === " ") {
+                        let neighbors = [[x, y - 1], [x, y + 1], [x - 1, y], [x + 1, y]].filter(([nx, ny]) => maze[ny] && maze[ny][nx] === "#");
+                        if (neighbors.length === 3) {
+                            let [wx, wy] = neighbors[Math.floor(Math.random() * neighbors.length)];
+                            maze[wy][wx] = " ";
+                        }
                     }
                 }
-                if (!moved) stack.pop();
             }
-            maze[exitPos.y][exitPos.x] = "E";
         }
 
         function drawMaze() {
