@@ -28,54 +28,29 @@
 <body>
     <h1>Maze Game V1.2</h1>
     <p>Use WASD or Arrow Keys to Move</p>
-    <p>The red block follows you around, 5 moves behind you, It will make backtracking harder</p>
+    <p>The red block follows you around, 5 moves behind you, making backtracking harder</p>
     <p>Reach the green square in the bottom right</p>
-    <label>Width: <input type="number" id="mazeWidth" value="80"></label>
-    <label>Height: <input type="number" id="mazeHeight" value="30"></label>
+    <label>Width: <input type="number" id="mazeWidth" value="81"></label>
+    <label>Height: <input type="number" id="mazeHeight" value="31"></label>
     <button onclick="setupMaze()">Generate</button>
     <div class="maze-container">
         <div class="maze" id="maze"></div>
     </div>
     <script>
-        let width = 80, height = 30;
-        let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
-        let playerPath = []; // To store player's past positions
-        let playerMoved = false; // Flag to check if the player has moved
-        let enemyInterval;
+        let width, height, maze, playerPos, exitPos, enemyPos, moveCount, playerPath, playerMoved, enemyInterval;
 
         function setupMaze() {
-            // Parse the input values and round them to the nearest odd number
-            width = parseInt(document.getElementById("mazeWidth").value);
-            height = parseInt(document.getElementById("mazeHeight").value);
-            
-            // Ensure width is odd
-            if (width % 2 === 0) {
-                width++;
-            }
-            
-            // Ensure height is odd
-            if (height % 2 === 0) {
-                height++;
-            }
-
-            // Reset the enemy position and clear any ongoing enemy movement interval
+            width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
+            height = Math.max(5, parseInt(document.getElementById("mazeHeight").value) | 1);
             enemyPos = null;
-            if (enemyInterval) {
-                clearInterval(enemyInterval);
-            }
+            clearInterval(enemyInterval);
             playerMoved = false;
-
-            // Update the grid template for maze size
-            document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
-            document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
-            
-            // Initialize positions and move count
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
             moveCount = 0;
             playerPath = [];
-            
-            // Generate and draw the maze
+            document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
+            document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             generateMaze();
             drawMaze();
         }
@@ -123,60 +98,42 @@
         function updateCamera() {
             const mazeElement = document.getElementById("maze");
             const container = document.querySelector(".maze-container");
-            const offsetX = Math.max(0, playerPos.x * 20 - container.clientWidth / 2);
-            const offsetY = Math.max(0, playerPos.y * 20 - container.clientHeight / 2);
-            mazeElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
+            mazeElement.style.transform = `translate(-${Math.max(0, playerPos.x * 20 - container.clientWidth / 2)}px, -${Math.max(0, playerPos.y * 20 - container.clientHeight / 2)}px)`;
         }
 
         function movePlayer(dx, dy) {
-            const newX = playerPos.x + dx;
-            const newY = playerPos.y + dy;
+            let newX = playerPos.x + dx, newY = playerPos.y + dy;
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
                 moveCount++;
-                playerPath.push({ ...playerPos }); // Store the player's position
-
-                // Remove the oldest position from the path if there are more than 5 positions
-                if (playerPath.length > 5) {
-                    playerPath.shift();
-                }
-
-                // Check if player and enemy occupy the same cell
+                playerPath.push({ ...playerPos });
+                if (playerPath.length > 5) playerPath.shift();
                 if (enemyPos && playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
                     alert("You Lose!");
-                    clearInterval(enemyInterval); // Stop the enemy movement
-                    return; // Stop further player movement
+                    clearInterval(enemyInterval);
+                    return;
                 }
-
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
-
-                // Spawn the enemy after the first move
                 if (!playerMoved) {
-                    enemyPos = { x: 1, y: 2 }; // Initial enemy position after first move
-                    playerMoved = true; // Set the flag to true after the first move
-                    enemyInterval = setInterval(moveEnemy, 500); // Start moving the enemy
+                    enemyPos = { x: 1, y: 2 };
+                    playerMoved = true;
+                    enemyInterval = setInterval(moveEnemy, 500);
                 }
             }
         }
 
         function moveEnemy() {
             if (playerPath.length >= 5) {
-                // The enemy follows the player's position 5 moves behind
-                enemyPos = playerPath[0]; // The enemy follows the 5th last position in the player's path
-                playerPath.shift(); // Remove the oldest position in the path
-
-                // Check if player and enemy occupy the same cell
+                enemyPos = playerPath.shift();
                 if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
                     alert("You Lose!");
-                    clearInterval(enemyInterval); // Stop the enemy movement
+                    clearInterval(enemyInterval);
                 }
-
                 drawMaze();
             }
         }
 
-        // Player controls
         document.addEventListener("keydown", (e) => {
             if (e.key === "ArrowUp" || e.key === "w") movePlayer(0, -1);
             if (e.key === "ArrowDown" || e.key === "s") movePlayer(0, 1);
