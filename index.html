@@ -34,7 +34,7 @@
     </style>
 </head>
 <body>
-    <h1>Maze Game V1.73 - Raycasting</h1>
+    <h1>Maze Game V1.4 - Raycasting Visibility</h1>
     <p>Use WASD or Arrow Keys to Move</p>
     <p>Reach the green square in the bottom right</p>
     <label>Width: <input type="number" id="mazeWidth" value="81"></label>
@@ -62,18 +62,22 @@
         function generateMaze() {
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
             let walls = [];
+            let visited = Array.from({ length: height }, () => Array(width).fill(false));
+
             function addWalls(x, y) {
                 [[0, -2], [0, 2], [-2, 0], [2, 0]].forEach(([dx, dy]) => {
                     let nx = x + dx, ny = y + dy;
-                    if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] === "#") {
+                    if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] === "#" && !visited[ny][nx]) {
                         walls.push([nx, ny, x, y]);
                     }
                 });
             }
 
             maze[1][1] = " ";
+            visited[1][1] = true;
             addWalls(1, 1);
 
+            // Introduce more randomness in wall placement
             while (walls.length) {
                 let randIndex = Math.floor(Math.random() * walls.length);
                 let [x, y, px, py] = walls.splice(randIndex, 1)[0];
@@ -81,6 +85,7 @@
                 if (maze[y][x] === "#") {
                     maze[y][x] = " ";
                     maze[(y + py) / 2][(x + px) / 2] = " ";
+                    visited[y][x] = true;
                     addWalls(x, y);
                 }
             }
