@@ -25,32 +25,42 @@
     <p>Use WASD or Arrow Keys to Move</p>
     <div class="maze" id="maze"></div>
     <script>
-        const mazeLayout = [
-            "##########",
-            "#P   #   #",
-            "# ## # # #",
-            "#    #   #",
-            "####### ##",
-            "#        #",
-            "# # ######",
-            "# #      #",
-            "# ###### #",
-            "#       E#"
-        ];
-        
-        const maze = document.getElementById("maze");
+        const size = 10;
+        let maze = Array(size).fill().map(() => Array(size).fill("#"));
         let playerPos = { x: 1, y: 1 };
+        let exitPos = { x: size - 2, y: size - 2 };
+        
+        function generateMaze() {
+            function carve(x, y) {
+                const directions = [
+                    [0, -2], [0, 2], [-2, 0], [2, 0]
+                ].sort(() => Math.random() - 0.5);
+                
+                maze[y][x] = " ";
+                directions.forEach(([dx, dy]) => {
+                    const nx = x + dx, ny = y + dy;
+                    if (ny > 0 && ny < size - 1 && nx > 0 && nx < size - 1 && maze[ny][nx] === "#") {
+                        maze[ny - dy / 2][nx - dx / 2] = " ";
+                        carve(nx, ny);
+                    }
+                });
+            }
+            maze[1][1] = " ";
+            carve(1, 1);
+            maze[exitPos.y][exitPos.x] = "E";
+        }
         
         function drawMaze() {
-            maze.innerHTML = "";
-            mazeLayout.forEach((row, y) => {
-                [...row].forEach((cell, x) => {
+            const mazeElement = document.getElementById("maze");
+            mazeElement.innerHTML = "";
+            maze.forEach((row, y) => {
+                row.forEach((cell, x) => {
                     const div = document.createElement("div");
                     div.classList.add("cell");
                     if (cell === "#") div.classList.add("wall");
                     if (x === playerPos.x && y === playerPos.y) div.classList.add("player");
                     if (cell === "E") div.classList.add("exit");
-                    maze.appendChild(div);
+                    mazeElement.appendChild(div);
                 });
             });
         }
@@ -58,10 +68,10 @@
         function movePlayer(dx, dy) {
             const newX = playerPos.x + dx;
             const newY = playerPos.y + dy;
-            if (mazeLayout[newY][newX] !== "#") {
+            if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
                 drawMaze();
-                if (mazeLayout[newY][newX] === "E") alert("You Win!");
+                if (maze[newY][newX] === "E") alert("You Win!");
             }
         }
         
@@ -72,6 +82,7 @@
             if (e.key === "ArrowRight" || e.key === "d") movePlayer(1, 0);
         });
         
+        generateMaze();
         drawMaze();
     </script>
 </body>
