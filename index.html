@@ -36,8 +36,7 @@
     </div>
     <script>
         let width = 80, height = 30;
-        let maze, playerPos, exitPos, enemyPos = null;
-        let moveCount = 0;
+        let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
 
         function setupMaze() {
             width = parseInt(document.getElementById("mazeWidth").value);
@@ -106,9 +105,7 @@
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
                 moveCount++;
-                if (moveCount === 5) {
-                    enemyPos = { x: exitPos.x, y: exitPos.y };
-                }
+                if (moveCount === 5) enemyPos = { ...playerPos };
                 if (enemyPos) moveEnemy();
                 drawMaze();
                 if (maze[newY][newX] === "E") alert("You Win!");
@@ -117,10 +114,15 @@
 
         function moveEnemy() {
             if (!enemyPos) return;
-            let dx = Math.sign(playerPos.x - enemyPos.x);
-            let dy = Math.sign(playerPos.y - enemyPos.y);
-            if (maze[enemyPos.y + dy][enemyPos.x] !== "#") enemyPos.y += dy;
-            else if (maze[enemyPos.y][enemyPos.x + dx] !== "#") enemyPos.x += dx;
+            let dx = playerPos.x - enemyPos.x;
+            let dy = playerPos.y - enemyPos.y;
+            let moveX = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : 0;
+            let moveY = moveX === 0 ? Math.sign(dy) : 0;
+            let newX = enemyPos.x + moveX;
+            let newY = enemyPos.y + moveY;
+            if (maze[newY][newX] !== "#") {
+                enemyPos = { x: newX, y: newY };
+            }
         }
 
         document.addEventListener("keydown", (e) => {
