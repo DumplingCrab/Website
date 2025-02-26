@@ -40,18 +40,36 @@
         let playerPath = []; // To store player's past positions
 
         function setupMaze() {
+            // Parse the input values and round them to the nearest odd number
             width = parseInt(document.getElementById("mazeWidth").value);
             height = parseInt(document.getElementById("mazeHeight").value);
+            
+            // Ensure width is odd
+            if (width % 2 === 0) {
+                width++;
+            }
+            
+            // Ensure height is odd
+            if (height % 2 === 0) {
+                height++;
+            }
+        
+            // Update the grid template for maze size
             document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
+            
+            // Initialize positions and move count
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
             enemyPos = { x: 1, y: 2 }; // Initial enemy position
             moveCount = 0;
             playerPath = [];
+            
+            // Generate and draw the maze
             generateMaze();
             drawMaze();
         }
+
 
         function generateMaze() {
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
