@@ -37,6 +37,7 @@
     <script>
         let width = 80, height = 30;
         let maze, playerPos, exitPos, enemyPos = null, moveCount = 0;
+        let playerPath = []; // To store player's past positions
 
         function setupMaze() {
             width = parseInt(document.getElementById("mazeWidth").value);
@@ -45,8 +46,9 @@
             document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
             playerPos = { x: 1, y: 1 };
             exitPos = { x: width - 2, y: height - 2 };
-            enemyPos = null;
+            enemyPos = { x: 1, y: 2 }; // Initial enemy position
             moveCount = 0;
+            playerPath = [];
             generateMaze();
             drawMaze();
         }
@@ -105,33 +107,16 @@
             if (maze[newY][newX] !== "#") {
                 playerPos = { x: newX, y: newY };
                 moveCount++;
-                if (moveCount === 5) enemyPos = { ...playerPos };
-                if (enemyPos) moveEnemy();
-                drawMaze();
-                if (maze[newY][newX] === "E") {
-                    alert("You Win!");
+                playerPath.push({ ...playerPos }); // Store the player's position
+
+                if (moveCount === 5) {
+                    // After 5 moves, move the enemy to the 5th last position of the player
+                    enemyPos = playerPath[0]; // The enemy follows the player's path with a delay
+                    playerPath.shift(); // Remove the oldest position in the path
                 }
-                checkCollision();
-            }
-        }
 
-        function moveEnemy() {
-            if (!enemyPos) return;
-            let dx = playerPos.x - enemyPos.x;
-            let dy = playerPos.y - enemyPos.y;
-            let moveX = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : 0;
-            let moveY = moveX === 0 ? Math.sign(dy) : 0;
-            let newX = enemyPos.x + moveX;
-            let newY = enemyPos.y + moveY;
-            if (maze[newY][newX] !== "#") {
-                enemyPos = { x: newX, y: newY };
-            }
-        }
-
-        function checkCollision() {
-            if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
-                alert("Game Over! You collided with the enemy.");
-                setupMaze(); // Reset the game
+                drawMaze();
+                if (maze[newY][newX] === "E") alert("You Win!");
             }
         }
 
