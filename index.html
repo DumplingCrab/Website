@@ -5,16 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maze Game</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
+        body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
+        .maze-container {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            overflow: hidden;
+            border: 2px solid black;
+            margin: 20px auto;
+        }
         .maze {
             display: grid;
-            grid-template-columns: repeat(10, 40px);
-            grid-template-rows: repeat(10, 40px);
-            gap: 2px;
-            margin: 20px auto;
-            width: max-content;
+            position: absolute;
+            grid-template-columns: repeat(80, 20px);
+            grid-template-rows: repeat(30, 20px);
         }
-        .cell { width: 40px; height: 40px; background: white; border: 1px solid black; }
+        .cell { width: 20px; height: 20px; background: white; border: 1px solid black; }
         .wall { background: black; }
         .player { background: blue; }
         .exit { background: green; }
@@ -23,37 +29,36 @@
 <body>
     <h1>Maze Game</h1>
     <p>Use WASD or Arrow Keys to Move</p>
-    <div class="maze" id="maze"></div>
+    <div class="maze-container">
+        <div class="maze" id="maze"></div>
+    </div>
     <script>
-        const size = 10;
-        let maze = Array(size).fill().map(() => Array(size).fill("#"));
+        const width = 80, height = 30;
+        let maze = Array.from({ length: height }, () => Array(width).fill("#"));
         let playerPos = { x: 1, y: 1 };
-        let exitPos = { x: size - 2, y: size - 2 };
+        let exitPos = { x: width - 2, y: height - 2 };
         
         function generateMaze() {
-            function carve(x, y) {
-                const directions = [
+            let stack = [[1, 1]];
+            maze[1][1] = " ";
+            while (stack.length) {
+                let [x, y] = stack[stack.length - 1];
+                let directions = [
                     [0, -2], [0, 2], [-2, 0], [2, 0]
                 ].sort(() => Math.random() - 0.5);
-                
-                maze[y][x] = " ";
-                directions.forEach(([dx, dy]) => {
-                    const nx = x + dx, ny = y + dy;
-                    if (ny > 0 && ny < size - 1 && nx > 0 && nx < size - 1 && maze[ny][nx] === "#") {
-                        maze[ny - dy / 2][nx - dx / 2] = " ";
-                        carve(nx, ny);
+                let moved = false;
+                for (let [dx, dy] of directions) {
+                    let nx = x + dx, ny = y + dy;
+                    if (ny > 0 && ny < height - 1 && nx > 0 && nx < width - 1 && maze[ny][nx] === "#") {
+                        maze[ny][nx] = " ";
+                        maze[y + dy / 2][x + dx / 2] = " ";
+                        stack.push([nx, ny]);
+                        moved = true;
+                        break;
                     }
-                });
+                }
+                if (!moved) stack.pop();
             }
-            maze[1][1] = " ";
-            carve(1, 1);
-            
-            // Ensure there's a path to the exit
-            maze[exitPos.y][exitPos.x] = " ";
-            maze[exitPos.y - 1][exitPos.x] = " ";
-            maze[exitPos.y][exitPos.x - 1] = " ";
-            maze[exitPos.y - 1][exitPos.x - 1] = " ";
-            
             maze[exitPos.y][exitPos.x] = "E";
         }
         
@@ -70,6 +75,15 @@
                     mazeElement.appendChild(div);
                 });
             });
+            updateCamera();
+        }
+        
+        function updateCamera() {
+            const mazeElement = document.getElementById("maze");
+            const container = document.querySelector(".maze-container");
+            const offsetX = Math.max(0, playerPos.x * 20 - container.clientWidth / 2);
+            const offsetY = Math.max(0, playerPos.y * 20 - container.clientHeight / 2);
+            mazeElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
         }
         
         function movePlayer(dx, dy) {
