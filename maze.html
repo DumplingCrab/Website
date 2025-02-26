@@ -107,13 +107,13 @@
         function applyRaycasting() {
             const cells = document.querySelectorAll(".cell");
             cells.forEach(cell => cell.classList.add("hidden"));
-
+            
             function castRay(angle) {
                 let x = playerPos.x;
                 let y = playerPos.y;
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
-
+                cells[(y*width+x)].classList.remove("hidden");
                 for (let i = 0; i < 10; i++) { // Limit how far the ray goes
                     x += dx;
                     y += dy;
