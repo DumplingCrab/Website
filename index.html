@@ -134,7 +134,7 @@
                 }
 
                 // Check if player and enemy occupy the same cell
-                if (playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
+                if (enemyPos && playerPos.x === enemyPos.x && playerPos.y === enemyPos.y) {
                     alert("You Lose!");
                     clearInterval(enemyInterval); // Stop the enemy movement
                     return; // Stop further player movement
