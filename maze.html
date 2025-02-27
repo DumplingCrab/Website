@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +39,7 @@
             margin-top: 20px;
         }
         .project-card {
-            background: #1e1e1e;
+            background: #d8d8d8;
             padding: 15px;
             border-radius: 10px;
             width: 200px;
@@ -63,6 +64,7 @@
     <div class="maze-container">
         <div class="maze" id="maze"></div>
     </div>
+    <div class="project-container" id="projects"></div>
     <script>
         let width, height, maze, playerPos, exitPos;
         const cellSize = 20;
@@ -250,6 +252,5 @@
             container.appendChild(card);
         });
     </script>
-    <div class="project-container" id="projects"></div>
 </body>
 </html>
