@@ -238,8 +238,7 @@
         setupMaze();
 
         const projects = [
-            { name: "Home", link: "" },
-            // Add more projects here as you expand
+            { name: "Home", link: "index.html" },
         ];
         
         const container = document.getElementById("projects");
@@ -248,7 +247,7 @@
             const card = document.createElement("div");
             card.className = "project-card";
             card.innerHTML = `<strong>${project.name}</strong>`;
-            card.onclick = () => window.location.href = project.link;
+            card.onclick = () => window.location.href = "https://dumplingcrab.com";
             container.appendChild(card);
         });
     </script>
