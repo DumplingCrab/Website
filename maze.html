@@ -179,6 +179,7 @@
         }
 
         function applyRaycasting() {
+            rays = 720;
             const cells = document.querySelectorAll(".cell");
             cells.forEach(cell => cell.classList.add("hidden"));
 
@@ -201,8 +202,8 @@
                 }
             }
 
-            for (let i = 0; i < 360; i++) {
-                let angle = (i / 360) * (Math.PI * 2);
+            for (let i = 0; i < rays; i++) {
+                let angle = (i / rays) * (Math.PI * 2);
                 castRay(angle);
             }
         }
