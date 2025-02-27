@@ -216,6 +216,22 @@
         });
 
         setupMaze();
+
+        const projects = [
+            { name: "Home", link: "index.html" },
+            // Add more projects here as you expand
+        ];
+        
+        const container = document.getElementById("projects");
+        
+        projects.forEach(project => {
+            const card = document.createElement("div");
+            card.className = "project-card";
+            card.innerHTML = `<strong>${project.name}</strong>`;
+            card.onclick = () => window.location.href = project.link;
+            container.appendChild(card);
+        });
     </script>
+    <div class="project-container" id="projects"></div>
 </body>
 </html>
