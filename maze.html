@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Game</title>
+    <title>Maze Game with Raycasting & Seed</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
         .maze-container {
@@ -33,7 +33,7 @@
     </style>
 </head>
 <body>
-    <h1>Maze Game V3.12</h1>
+    <h1>Maze Game V3.0 - Raycasting & Seed</h1>
     <p>Use WASD or Arrow Keys to Move</p>
     <p>Reach the green square in the bottom right</p>
     <label>Width: <input type="number" id="mazeWidth" value="81"></label>
@@ -60,12 +60,16 @@
         function parseSeed(seedString) {
             const parts = seedString.split(".");
             if (parts.length !== 3 || parts[2].length !== 13) {
-                alert("Invalid seed format. Use XX.XX.XXXXXXXXXXXXX.");
+                alert("Invalid seed format. Use XX.XX.XXXXXXXXXXXXX. (13 digit seed value)");
                 return false;
             }
             width = Math.max(5, parseInt(parts[0]) || 5);
             height = Math.max(5, parseInt(parts[1]) || 5);
             rngSeed = parseInt(parts[2]);
+
+            // Ensure width and height are odd
+            if (width % 2 === 0) width++;
+            if (height % 2 === 0) height++;
 
             // Update width & height fields
             document.getElementById("mazeWidth").value = width;
@@ -77,6 +81,11 @@
         function setupMaze() {
             width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) || 5);
             height = Math.max(5, parseInt(document.getElementById("mazeHeight").value) || 5);
+            
+            // Ensure width and height are odd
+            if (width % 2 === 0) width++;
+            if (height % 2 === 0) height++;
+
             rngSeed = Math.floor(Math.random() * 10000000000000) + 1000000000000; // 13-digit random seed
 
             // Construct the full seed string using periods instead of dashes
