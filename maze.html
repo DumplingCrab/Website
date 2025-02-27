@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Game</title>
+    <title>Maze Game with Raycasting & Seed</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; overflow: hidden; }
         .maze-container {
@@ -17,7 +17,7 @@
         .maze {
             display: grid;
             position: absolute;
-            transition: transform 0.1s ease-in-out; /* Smooth transition for camera movement */
+            transition: transform 0.1s ease-in-out;
         }
         .cell {
             width: 20px; height: 20px;
@@ -29,58 +29,103 @@
         .floor { background: white; }
         .player { background: blue; }
         .exit { background: green; }
-        .enemy { background: red; }
         .hidden { background: gray !important; }
     </style>
 </head>
 <body>
-    <h1>Maze Game V2.78 - Raycasting Visibility</h1>
+    <h1>Maze Game V3.0 - Raycasting & Seed</h1>
     <p>Use WASD or Arrow Keys to Move</p>
     <p>Reach the green square in the bottom right</p>
     <label>Width: <input type="number" id="mazeWidth" value="81"></label>
     <label>Height: <input type="number" id="mazeHeight" value="31"></label>
     <button onclick="setupMaze()">Generate</button>
+    <br><br>
+    <label>Seed: <input type="text" id="mazeSeed" placeholder="XX.XX.XXXXXXXXXXXXX"></label>
+    <button onclick="generateFromSeed()">Generate from Seed</button>
     <div class="maze-container">
         <div class="maze" id="maze"></div>
     </div>
     <script>
         let width, height, maze, playerPos, exitPos;
-        const rayCount = 720; // Number of rays for visibility
-        const cellSize = 20; // Size of each cell
+        const cellSize = 20;
+        let rngSeed = 1234567890123;
+
+        function seededRandom(seed) {
+            return function () {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
+        }
+
+        function parseSeed(seedString) {
+            const parts = seedString.split(".");
+            if (parts.length !== 3 || parts[2].length !== 13) {
+                alert("Invalid seed format. Use XX.XX.XXXXXXXXXXXXX.");
+                return false;
+            }
+            width = Math.max(5, parseInt(parts[0]) || 5);
+            height = Math.max(5, parseInt(parts[1]) || 5);
+            rngSeed = parseInt(parts[2]);
+
+            // Update width & height fields
+            document.getElementById("mazeWidth").value = width;
+            document.getElementById("mazeHeight").value = height;
+
+            return true;
+        }
 
         function setupMaze() {
-            width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) | 1);
-            height = Math.max(5, parseInt(document.getElementById("mazeHeight").value) | 1);
-            playerPos = { x: 1, y: 1 };
-            exitPos = { x: width - 2, y: height - 2 };
-            document.getElementById("maze").style.gridTemplateColumns = `repeat(${width}, 20px)`;
-            document.getElementById("maze").style.gridTemplateRows = `repeat(${height}, 20px)`;
+            width = Math.max(5, parseInt(document.getElementById("mazeWidth").value) || 5);
+            height = Math.max(5, parseInt(document.getElementById("mazeHeight").value) || 5);
+            rngSeed = Math.floor(Math.random() * 10000000000000) + 1000000000000; // 13-digit random seed
+
+            // Construct the full seed string using periods instead of dashes
+            const fullSeed = `${width}.${height}.${rngSeed}`;
+            
+            // Place the seed in the input box for easy access
+            document.getElementById("mazeSeed").value = fullSeed;
+
             generateMaze();
             drawMaze();
         }
 
+        function generateFromSeed() {
+            const seedInput = document.getElementById("mazeSeed").value.trim();
+            if (parseSeed(seedInput)) {
+                generateMaze();
+                drawMaze();
+            }
+        }
+
         function generateMaze() {
+            let rand = seededRandom(rngSeed);
             maze = Array.from({ length: height }, () => Array(width).fill("#"));
             let walls = [];
+            let visited = Array.from({ length: height }, () => Array(width).fill(false));
+
             function addWalls(x, y) {
                 [[0, -2], [0, 2], [-2, 0], [2, 0]].forEach(([dx, dy]) => {
                     let nx = x + dx, ny = y + dy;
-                    if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] === "#") {
+                    if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] === "#" && !visited[ny][nx]) {
                         walls.push([nx, ny, x, y]);
                     }
                 });
             }
 
+            playerPos = { x: 1, y: 1 };
+            exitPos = { x: width - 2, y: height - 2 };
             maze[1][1] = " ";
+            visited[1][1] = true;
             addWalls(1, 1);
 
             while (walls.length) {
-                let randIndex = Math.floor(Math.random() * walls.length);
+                let randIndex = Math.floor(rand() * walls.length);
                 let [x, y, px, py] = walls.splice(randIndex, 1)[0];
 
                 if (maze[y][x] === "#") {
                     maze[y][x] = " ";
                     maze[(y + py) / 2][(x + px) / 2] = " ";
+                    visited[y][x] = true;
                     addWalls(x, y);
                 }
             }
@@ -91,6 +136,9 @@
         function drawMaze() {
             const mazeElement = document.getElementById("maze");
             mazeElement.innerHTML = "";
+            mazeElement.style.gridTemplateColumns = `repeat(${width}, 20px)`;
+            mazeElement.style.gridTemplateRows = `repeat(${height}, 20px)`;
+
             maze.forEach((row, y) => {
                 row.forEach((cell, x) => {
                     const div = document.createElement("div");
@@ -109,14 +157,14 @@
         function applyRaycasting() {
             const cells = document.querySelectorAll(".cell");
             cells.forEach(cell => cell.classList.add("hidden"));
-            
+
             function castRay(angle) {
                 let x = playerPos.x;
                 let y = playerPos.y;
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
                 cells[(y * width + x)].classList.remove("hidden");
-                for (let i = 0; i < 10; i++) { // Limit how far the ray goes
+                for (let i = 0; i < 10; i++) {
                     x += dx;
                     y += dy;
                     let ix = Math.round(x);
@@ -124,13 +172,13 @@
                     if (maze[iy] && maze[iy][ix] !== undefined) {
                         let index = iy * width + ix;
                         cells[index].classList.remove("hidden");
-                        if (maze[iy][ix] === "#") break; // Stop if we hit a wall
+                        if (maze[iy][ix] === "#") break;
                     }
                 }
             }
 
-            for (let i = 0; i < rayCount; i++) {
-                let angle = (i / rayCount) * (Math.PI * 2);
+            for (let i = 0; i < 360; i++) {
+                let angle = (i / 360) * (Math.PI * 2);
                 castRay(angle);
             }
         }
