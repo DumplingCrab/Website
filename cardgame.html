@@ -16,25 +16,6 @@
         h1 {
             font-size: 3rem;
         }
-        .blog-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .text-box, .image-box {
-            background: #292929;
-            padding: 15px;
-            border-radius: 10px;
-            width: 60%;
-            max-width: 600px;
-            text-align: left;
-        }
-        .image-box img {
-            width: 100%;
-            border-radius: 10px;
-        }
         .project-container {
             display: flex;
             flex-wrap: wrap;
@@ -57,46 +38,16 @@
 </head>
 <body>
     <h1>Card Game Development</h1>
-    <p>Devlog of the digital cardgame I am working on</p>
-    
-    <div class="blog-container" id="blog">
-        <!-- Blog entries will be inserted here dynamically -->
-    </div>
+    <p>Devlog of the digital card game I am working on</p>
     
     <div class="project-container" id="projects">
-        <!-- Home button will be inserted here dynamically -->
+        <!-- Blog button will be inserted here dynamically -->
     </div>
     
     <script>
-        const blogEntries = [
-            { type: "text", content: "The Card game is going to be your standard card based dungeon crawler, My goal is to have the peices and enemies be from different board games and other things of the sorts, so far I have: Playing cards, chess and domnios. The extra ones are going to be for small powerups such as extra damage and health" },
-            { type: "image", content: "cardgame_images/Card Base.png" },
-            { type: "text", content: "Made a font and numbers to go inside the cards:" },
-            { type: "image", content: "cardgame_images/Card Numbers.png" },
-            { type: "text", content: "Test mockup in Godot" },
-            { type: "image", content: "cardgame_images/Test_mockup.png" }
-        ];
-        
-        const blogContainer = document.getElementById("blog");
-        
-        blogEntries.forEach(entry => {
-            const box = document.createElement("div");
-            box.className = entry.type === "text" ? "text-box" : "image-box";
-            
-            if (entry.type === "text") {
-                box.textContent = entry.content;
-            } else {
-                const img = document.createElement("img");
-                img.src = entry.content;
-                img.alt = "Blog image";
-                box.appendChild(img);
-            }
-            
-            blogContainer.appendChild(box);
-        });
-
         const projects = [
-            { name: "Home", link: "https://dumplingcrab.com" },
+            { name: "Devlog 03-05-2025", link: "cardgame_blogs/Devlog03_05_2025.html" },
+            { name: "Home", link "https://dumplingcrab.com"},
         ];
         
         const projectContainer = document.getElementById("projects");
