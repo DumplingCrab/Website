@@ -3,83 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapid Fire Random Numbers</title>
+    <title>Server Data Stream</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #121212;
-            color: white;
+            background-color: black;
+            color: limegreen;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
         }
-        table {
-            width: 80%;
-            margin: auto;
-            border-collapse: collapse;
-            border: 1px solid white;
-        }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #333;
-        }
-        tbody {
-            display: block;
-            height: 400px;
-            overflow-y: auto;
-        }
-        tr {
-            display: table;
+        #terminal {
             width: 100%;
-            table-layout: fixed;
+            height: 90vh;
+            overflow-y: auto;
+            white-space: nowrap;
+            padding: 10px;
+            border: 1px solid limegreen;
+            box-shadow: 0 0 10px limegreen;
+        }
+        .entry {
+            margin: 2px 0;
+        }
+        .highlight {
+            color: yellow;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: cyan;
         }
     </style>
 </head>
 <body>
-    <h1>Random Number Strings</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Random String</th>
-            </tr>
-        </thead>
-        <tbody id="data-body">
-        </tbody>
-    </table>
+    <h2>Server Data Stream</h2>
+    <div id="terminal"></div>
 
     <script>
-        function generateRandomString() {
-            let parts = [];
-            let numParts = Math.floor(Math.random() * 5) + 2; // 2 to 6 parts
-            for (let i = 0; i < numParts; i++) {
-                let part = Math.floor(Math.random() * 1000); // Random number 0-999
-                parts.push(part);
+        const terminal = document.getElementById("terminal");
+
+        function getRandomData() {
+            const prefixes = ["PING", "ERROR", "DATA", "LOG", "SYS", "AUTH", "NET", "USER", "CONN", "CACHE"];
+            const suffixes = ["OK", "FAIL", "TIMEOUT", "ACTIVE", "LOADED", "RESET", "UPDATED", "INVALID", "SUCCESS", "DENIED"];
+            const ip = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+            const id = Math.floor(Math.random() * 10000);
+            const randomValue = Math.random() > 0.5 ? "-" : ".";
+            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
+
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+            const randomString = `${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}`;
+
+            let message = `[${timestamp}] <span class="highlight">${prefix}</span> - ${ip} - <span class="info">${randomString}</span> - <span class="highlight">${suffix}</span>`;
+
+            if (prefix === "ERROR") {
+                message = `[${timestamp}] <span class="error">ERROR</span> - ${ip} - <span class="highlight">${randomString}</span> - <span class="error">${suffix}</span>`;
             }
-            return parts.join(Math.random() > 0.5 ? '-' : '.'); // Randomly use dash or dot
+
+            return `<div class="entry">${message}</div>`;
         }
 
-        function addRow() {
-            const tableBody = document.getElementById("data-body");
-            const row = document.createElement("tr");
-
-            const cell1 = document.createElement("td");
-            cell1.textContent = tableBody.children.length + 1;
-
-            const cell2 = document.createElement("td");
-            cell2.textContent = generateRandomString();
-
-            row.appendChild(cell1);
-            row.appendChild(cell2);
-            tableBody.appendChild(row);
-
-            // Auto-scroll
-            tableBody.scrollTop = tableBody.scrollHeight;
+        function addLog() {
+            terminal.innerHTML += getRandomData();
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        setInterval(addRow, 200); // Adjust speed as needed
+        setInterval(addLog, 200);
     </script>
 </body>
 </html>
