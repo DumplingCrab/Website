@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server 4 Data Stream</title>
+    <title>Server Data Stream</title>
     <style>
         body {
             background-color: black;
@@ -41,17 +41,21 @@
     <script>
         const terminal = document.getElementById("terminal");
 
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString(); // Uses local system time
+        }
+
         function getRandomData() {
             const prefixes = ["PING", "ERROR", "DATA", "LOG", "SYS", "AUTH", "NET", "USER", "CONN", "CACHE"];
             const suffixes = ["OK", "FAIL", "TIMEOUT", "ACTIVE", "LOADED", "RESET", "UPDATED", "INVALID", "SUCCESS", "DENIED"];
             const ip = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
-            const id = Math.floor(Math.random() * 10000);
             const randomValue = Math.random() > 0.5 ? "-" : ".";
-            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
+            const randomString = `${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}`;
+            const timestamp = getCurrentTime();
 
             const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
             const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-            const randomString = `${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}`;
 
             let message = `[${timestamp}] <span class="highlight">${prefix}</span> - ${ip} - <span class="info">${randomString}</span> - <span class="highlight">${suffix}</span>`;
 
