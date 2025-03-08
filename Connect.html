@@ -55,7 +55,7 @@
 
         function getCurrentTime() {
             const now = new Date();
-            return now.toLocaleTimeString(); // Uses local system time
+            return now.toLocaleTimeString();
         }
 
         function getRandomIP() {
@@ -63,17 +63,12 @@
         }
 
         function getRandomFileSize() {
-            const sizes = ["MB", "GB", "TB"];
-            let size = (Math.random() * (10000 - 5) + 5).toFixed(2); // 5MB to 10TB
-            let unit = sizes[Math.floor(Math.random() * sizes.length)];
-            return `${size} ${unit}`;
+            const size = Math.pow(10, Math.random() * 3 + 1) * (Math.random() * 500 + 100); // 5MB to 10TB
+            return size.toFixed(2); // Convert to two decimal places
         }
 
         function getRandomSpeed() {
-            const speeds = ["MB/s", "GB/s"];
-            let speed = (Math.random() * (1000 - 10) + 10).toFixed(2); // 10MB/s to 1000GB/s
-            let unit = speeds[Math.floor(Math.random() * speeds.length)];
-            return `${speed} ${unit}`;
+            return (Math.random() * 4000 + 50).toFixed(2); // 50MB/s to 4000MB/s (4GB/s)
         }
 
         function createLoadingBar() {
@@ -88,13 +83,17 @@
         function simulateTask() {
             const ip1 = getRandomIP();
             const ip2 = getRandomIP();
-            const fileSize = getRandomFileSize();
-            const speed = getRandomSpeed();
+            const fileSizeMB = parseFloat(getRandomFileSize()); // File size in MB
+            const speedMBps = parseFloat(getRandomSpeed()); // Speed in MB/s
+            const transferTime = fileSizeMB / speedMBps; // Time in seconds
             const timestamp = getCurrentTime();
+            const unit = fileSizeMB >= 1000 ? "GB" : "MB"; // Convert to GB if needed
+            const displaySize = fileSizeMB >= 1000 ? (fileSizeMB / 1000).toFixed(2) : fileSizeMB.toFixed(2);
+            const displaySpeed = speedMBps >= 1000 ? (speedMBps / 1000).toFixed(2) + " GB/s" : speedMBps.toFixed(2) + " MB/s";
 
             const entry = document.createElement("div");
             entry.classList.add("entry");
-            entry.innerHTML = `[${timestamp}] <span class="highlight">TASK STARTED</span> - ${ip1} → ${ip2} - <span class="info">${fileSize}</span> at <span class="highlight">${speed}</span>`;
+            entry.innerHTML = `[${timestamp}] <span class="highlight">TASK STARTED</span> - ${ip1} → ${ip2} - <span class="info">${displaySize} ${unit}</span> at <span class="highlight">${displaySpeed}</span>`;
 
             const { loadingBar, progress } = createLoadingBar();
 
@@ -103,25 +102,30 @@
             terminal.scrollTop = terminal.scrollHeight;
 
             let progressValue = 0;
+            const updateRate = 50; // Update every 50ms
+            const totalUpdates = (transferTime * 1000) / updateRate; // Number of updates required
+            let currentUpdate = 0;
+
             const interval = setInterval(() => {
-                progressValue += Math.random() * 15; // Randomized speed
+                progressValue = (currentUpdate / totalUpdates) * 100;
+                progress.style.width = `${progressValue}%`;
+                currentUpdate++;
+
                 if (progressValue >= 100) {
-                    progress.style.width = "100%";
                     clearInterval(interval);
+                    progress.style.width = "100%";
 
                     const completedEntry = document.createElement("div");
                     completedEntry.classList.add("entry");
-                    completedEntry.innerHTML = `[${getCurrentTime()}] <span class="info">TASK COMPLETED</span> - ${ip1} → ${ip2} - <span class="highlight">${fileSize}</span> transferred`;
-                    
+                    completedEntry.innerHTML = `[${getCurrentTime()}] <span class="info">TASK COMPLETED</span> - ${ip1} → ${ip2} - <span class="highlight">${displaySize} ${unit}</span> transferred`;
+
                     terminal.appendChild(completedEntry);
                     terminal.scrollTop = terminal.scrollHeight;
-                } else {
-                    progress.style.width = `${progressValue}%`;
                 }
-            }, 200);
+            }, updateRate);
         }
 
-        setInterval(simulateTask, 1500);
+        setInterval(simulateTask, 2000);
     </script>
 </body>
 </html>
