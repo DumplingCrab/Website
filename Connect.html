@@ -3,143 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Data Transfer</title>
+    <title>Terminal File Transfer</title>
     <style>
         body {
             background-color: black;
-            color: limegreen;
+            color: #00ff00;
             font-family: 'Courier New', monospace;
-            padding: 10px;
+            padding: 20px;
         }
-        #terminal {
-            width: 100%;
-            height: 90vh;
+        .terminal {
+            border: 2px solid #00ff00;
+            padding: 15px;
+            width: 80%;
+            max-width: 800px;
+            margin: auto;
+            white-space: pre;
+            height: 400px;
             overflow-y: auto;
-            white-space: nowrap;
-            padding: 10px;
-            border: 1px solid limegreen;
-            box-shadow: 0 0 10px limegreen;
-        }
-        .entry {
-            margin: 2px 0;
-        }
-        .highlight {
-            color: yellow;
-        }
-        .error {
-            color: red;
-        }
-        .info {
-            color: cyan;
-        }
-        .loading-bar {
-            width: 100%;
-            height: 12px;
-            background-color: rgba(0, 255, 0, 0.2);
-            position: relative;
-            margin-top: 2px;
-        }
-        .progress {
-            height: 100%;
-            background-color: limegreen;
-            width: 0%;
         }
     </style>
 </head>
 <body>
-    <h2>Server Data Transfer</h2>
-    <div id="terminal"></div>
+
+    <div class="terminal" id="terminal-output">
+        Initializing transfers...\n
+    </div>
 
     <script>
-        const terminal = document.getElementById("terminal");
+        const transfers = [
+            { filename: "backup-2025-03-08.zip", size: 2.4 * 1024, speed: 10, source: "192.168.1.45", destination: "203.0.113.7" },
+            { filename: "server-logs.tar.gz", size: 350, speed: 3.2, source: "10.0.0.2", destination: "198.51.100.5" },
+            { filename: "video-render.mp4", size: 8000, speed: 25, source: "172.16.254.3", destination: "203.0.113.15" }
+        ];
 
-        function getCurrentTime() {
-            const now = new Date();
-            return now.toLocaleTimeString();
+        function formatSize(sizeMB) {
+            return sizeMB > 1024 ? (sizeMB / 1024).toFixed(2) + " GB" : sizeMB.toFixed(2) + " MB";
         }
 
-        function getRandomIP() {
-            return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+        function formatTime(seconds) {
+            let h = Math.floor(seconds / 3600);
+            let m = Math.floor((seconds % 3600) / 60);
+            let s = Math.floor(seconds % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        function getRandomFileSize() {
-            const random = Math.random();
-            let sizeGB;
+        function updateTerminal(text) {
+            const terminal = document.getElementById("terminal-output");
+            terminal.innerHTML += text + "\n";
+            terminal.scrollTop = terminal.scrollHeight;
+        }
 
-            if (random < 0.05) {
-                // 5% chance for a very large file (1TB - 5TB)
-                sizeGB = Math.random() * (5000 - 1000) + 1000;
-            } else if (random < 0.2) {
-                // 15% chance for a medium-large file (100GB - 1TB)
-                sizeGB = Math.random() * (1000 - 100) + 100;
-            } else if (random < 0.8) {
-                // 60% chance for a common file (50GB - 100GB)
-                sizeGB = Math.random() * (100 - 50) + 50;
-            } else {
-                // 20% chance for a smaller file (1GB - 50GB)
-                sizeGB = Math.random() * (50 - 1) + 1;
+        function startTransfers(index = 0) {
+            if (index >= transfers.length) {
+                updateTerminal("\nAll transfers completed successfully!");
+                return;
             }
 
-            return sizeGB.toFixed(2); // Return size in GB with 2 decimal places
-        }
+            let transfer = transfers[index];
+            let currentSpeed = transfer.speed;
+            transfer.progress = 0;
+            transfer.remaining = transfer.size / currentSpeed;
 
-        function getRandomSpeed() {
-            return (Math.random() * (2000 - 100) + 100).toFixed(2); // 100MB/s to 2GB/s
-        }
+            updateTerminal(`\nTransfer #${index + 1}: ${transfer.filename}`);
+            updateTerminal(`  Size: ${formatSize(transfer.size)}`);
+            updateTerminal(`  From: ${transfer.source} -> To: ${transfer.destination}`);
+            updateTerminal(`  Base Speed: ${transfer.speed.toFixed(2)} MB/s`);
+            updateTerminal(`  Status: In Progress...\n`);
 
-        function createLoadingBar() {
-            const loadingBar = document.createElement("div");
-            loadingBar.classList.add("loading-bar");
-            const progress = document.createElement("div");
-            progress.classList.add("progress");
-            loadingBar.appendChild(progress);
-            return { loadingBar, progress };
-        }
+            function updateProgress() {
+                if (transfer.progress < 100) {
+                    // Speed fluctuations (±20%)
+                    let speedVariance = (Math.random() * 0.4 - 0.2) * currentSpeed;
+                    currentSpeed = Math.max(0.5, transfer.speed + speedVariance);
 
-        function simulateTask() {
-            const ip1 = getRandomIP();
-            const ip2 = getRandomIP();
-            const fileSizeGB = parseFloat(getRandomFileSize()); // File size in GB
-            const speedMBps = parseFloat(getRandomSpeed()); // Speed in MB/s
-            const transferTime = (fileSizeGB * 1000) / speedMBps; // Time in seconds
-            const timestamp = getCurrentTime();
-            const displaySpeed = speedMBps >= 1000 ? (speedMBps / 1000).toFixed(2) + " GB/s" : speedMBps.toFixed(2) + " MB/s";
+                    // Packet loss (5% chance)
+                    if (Math.random() < 0.05) {
+                        currentSpeed *= 0.5;
+                        updateTerminal(`  ⚠ Packet loss detected. Speed reduced to ${currentSpeed.toFixed(2)} MB/s`);
+                    }
 
-            const entry = document.createElement("div");
-            entry.classList.add("entry");
-            entry.innerHTML = `[${timestamp}] <span class="highlight">TASK STARTED</span> - ${ip1} → ${ip2} - <span class="info">${fileSizeGB} GB</span> at <span class="highlight">${displaySpeed}</span>`;
+                    // Connection loss (2% chance)
+                    if (Math.random() < 0.02) {
+                        updateTerminal(`  ❌ Connection lost. Reconnecting...`);
+                        setTimeout(updateProgress, 5000); // Pause for 5 seconds
+                        return;
+                    }
 
-            const { loadingBar, progress } = createLoadingBar();
+                    // Update progress
+                    transfer.progress += (currentSpeed / transfer.size) * 100;
+                    transfer.remaining = Math.max(0, transfer.remaining - 1);
 
-            terminal.appendChild(entry);
-            terminal.appendChild(loadingBar);
-            terminal.scrollTop = terminal.scrollHeight;
+                    // Generate progress bar
+                    let bar = "[" + "=".repeat(Math.floor(transfer.progress / 5)) + " ".repeat(20 - Math.floor(transfer.progress / 5)) + "]";
+                    updateTerminal(`  ${bar} ${transfer.progress.toFixed(1)}% - ETA: ${formatTime(transfer.remaining)}`);
 
-            let progressValue = 0;
-            const updateRate = 50; // Update every 50ms
-            const totalUpdates = (transferTime * 1000) / updateRate; // Number of updates required
-            let currentUpdate = 0;
-
-            const interval = setInterval(() => {
-                progressValue = (currentUpdate / totalUpdates) * 100;
-                progress.style.width = `${progressValue}%`;
-                currentUpdate++;
-
-                if (progressValue >= 100) {
-                    clearInterval(interval);
-                    progress.style.width = "100%";
-
-                    const completedEntry = document.createElement("div");
-                    completedEntry.classList.add("entry");
-                    completedEntry.innerHTML = `[${getCurrentTime()}] <span class="info">TASK COMPLETED</span> - ${ip1} → ${ip2} - <span class="highlight">${fileSizeGB} GB</span> transferred`;
-
-                    terminal.appendChild(completedEntry);
-                    terminal.scrollTop = terminal.scrollHeight;
+                    setTimeout(updateProgress, 1000);
+                } else {
+                    updateTerminal(`  ✅ ${transfer.filename} - Completed!`);
+                    startTransfers(index + 1); // Start next transfer after this one finishes
                 }
-            }, updateRate);
+            }
+
+            updateProgress();
         }
 
-        setInterval(simulateTask, 3000); // Start a new task every 3 seconds
+        setTimeout(() => {
+            updateTerminal("\nTransfers initialized. Starting now...\n");
+            startTransfers();
+        }, 2000);
     </script>
+
 </body>
 </html>
