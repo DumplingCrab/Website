@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Data Stream</title>
+    <title>Server Data Transfer</title>
     <style>
         body {
             background-color: black;
@@ -32,10 +32,22 @@
         .info {
             color: cyan;
         }
+        .loading-bar {
+            width: 100%;
+            height: 12px;
+            background-color: rgba(0, 255, 0, 0.2);
+            position: relative;
+            margin-top: 2px;
+        }
+        .progress {
+            height: 100%;
+            background-color: limegreen;
+            width: 0%;
+        }
     </style>
 </head>
 <body>
-    <h2>Server Data Stream</h2>
+    <h2>Server Data Transfer</h2>
     <div id="terminal"></div>
 
     <script>
@@ -46,32 +58,70 @@
             return now.toLocaleTimeString(); // Uses local system time
         }
 
-        function getRandomData() {
-            const prefixes = ["PING", "ERROR", "DATA", "LOG", "SYS", "AUTH", "NET", "USER", "CONN", "CACHE"];
-            const suffixes = ["OK", "FAIL", "TIMEOUT", "ACTIVE", "LOADED", "RESET", "UPDATED", "INVALID", "SUCCESS", "DENIED"];
-            const ip = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
-            const randomValue = Math.random() > 0.5 ? "-" : ".";
-            const randomString = `${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}${randomValue}${Math.floor(Math.random() * 999)}`;
+        function getRandomIP() {
+            return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+        }
+
+        function getRandomFileSize() {
+            const sizes = ["MB", "GB", "TB"];
+            let size = (Math.random() * (10000 - 5) + 5).toFixed(2); // 5MB to 10TB
+            let unit = sizes[Math.floor(Math.random() * sizes.length)];
+            return `${size} ${unit}`;
+        }
+
+        function getRandomSpeed() {
+            const speeds = ["MB/s", "GB/s"];
+            let speed = (Math.random() * (1000 - 10) + 10).toFixed(2); // 10MB/s to 1000GB/s
+            let unit = speeds[Math.floor(Math.random() * speeds.length)];
+            return `${speed} ${unit}`;
+        }
+
+        function createLoadingBar() {
+            const loadingBar = document.createElement("div");
+            loadingBar.classList.add("loading-bar");
+            const progress = document.createElement("div");
+            progress.classList.add("progress");
+            loadingBar.appendChild(progress);
+            return { loadingBar, progress };
+        }
+
+        function simulateTask() {
+            const ip1 = getRandomIP();
+            const ip2 = getRandomIP();
+            const fileSize = getRandomFileSize();
+            const speed = getRandomSpeed();
             const timestamp = getCurrentTime();
 
-            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-            const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+            const entry = document.createElement("div");
+            entry.classList.add("entry");
+            entry.innerHTML = `[${timestamp}] <span class="highlight">TASK STARTED</span> - ${ip1} → ${ip2} - <span class="info">${fileSize}</span> at <span class="highlight">${speed}</span>`;
 
-            let message = `[${timestamp}] <span class="highlight">${prefix}</span> - ${ip} - <span class="info">${randomString}</span> - <span class="highlight">${suffix}</span>`;
+            const { loadingBar, progress } = createLoadingBar();
 
-            if (prefix === "ERROR") {
-                message = `[${timestamp}] <span class="error">ERROR</span> - ${ip} - <span class="highlight">${randomString}</span> - <span class="error">${suffix}</span>`;
-            }
-
-            return `<div class="entry">${message}</div>`;
-        }
-
-        function addLog() {
-            terminal.innerHTML += getRandomData();
+            terminal.appendChild(entry);
+            terminal.appendChild(loadingBar);
             terminal.scrollTop = terminal.scrollHeight;
+
+            let progressValue = 0;
+            const interval = setInterval(() => {
+                progressValue += Math.random() * 15; // Randomized speed
+                if (progressValue >= 100) {
+                    progress.style.width = "100%";
+                    clearInterval(interval);
+
+                    const completedEntry = document.createElement("div");
+                    completedEntry.classList.add("entry");
+                    completedEntry.innerHTML = `[${getCurrentTime()}] <span class="info">TASK COMPLETED</span> - ${ip1} → ${ip2} - <span class="highlight">${fileSize}</span> transferred`;
+                    
+                    terminal.appendChild(completedEntry);
+                    terminal.scrollTop = terminal.scrollHeight;
+                } else {
+                    progress.style.width = `${progressValue}%`;
+                }
+            }, 200);
         }
 
-        setInterval(addLog, 200);
+        setInterval(simulateTask, 1500);
     </script>
 </body>
 </html>
