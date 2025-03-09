@@ -17,24 +17,27 @@
             width: 80%;
             max-width: 800px;
             margin: auto;
-            white-space: pre;
+            white-space: pre-wrap;
             height: 400px;
             overflow-y: auto;
+            line-height: 1.2;
         }
     </style>
 </head>
 <body>
 
-    <div class="terminal" id="terminal-output">
-        Initializing transfers...\n
-    </div>
+    <div class="terminal" id="terminal-output"></div>
 
     <script>
-        const transfers = [
-            { filename: "backup-2025-03-08.zip", size: 2.4 * 1024, speed: 10, source: "192.168.1.45", destination: "203.0.113.7" },
-            { filename: "server-logs.tar.gz", size: 350, speed: 3.2, source: "10.0.0.2", destination: "198.51.100.5" },
-            { filename: "video-render.mp4", size: 8000, speed: 25, source: "172.16.254.3", destination: "203.0.113.15" }
-        ];
+        function getRandomFileName() {
+            const categories = ["backup", "server_logs", "render", "dataset", "sys_update", "project_files"];
+            const extensions = [".zip", ".tar.gz", ".mp4", ".csv", ".log", ".json", ".bin"];
+            const projectId = `P${Math.floor(Math.random() * 9000) + 1000}`;
+            const serverId = `SRV-${Math.floor(Math.random() * 999) + 100}`;
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, "");
+            const hash = Math.random().toString(36).substring(2, 8).toUpperCase();
+            return `${categories[Math.floor(Math.random() * categories.length)]}_${timestamp}_${projectId}_${serverId}_${hash}${extensions[Math.floor(Math.random() * extensions.length)]}`;
+        }
 
         function formatSize(sizeMB) {
             return sizeMB > 1024 ? (sizeMB / 1024).toFixed(2) + " GB" : sizeMB.toFixed(2) + " MB";
@@ -47,70 +50,104 @@
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
+        function getTimestamp() {
+            return new Date().toISOString().split("T")[1].split(".")[0]; // HH:MM:SS format
+        }
+
         function updateTerminal(text) {
             const terminal = document.getElementById("terminal-output");
             terminal.innerHTML += text + "\n";
             terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function startTransfers(index = 0) {
-            if (index >= transfers.length) {
-                updateTerminal("\nAll transfers completed successfully!");
-                return;
+        // Generate some completed transfers to simulate a running server
+        const completedTransfers = [];
+        for (let i = 0; i < 5; i++) {
+            let file = getRandomFileName();
+            let size = Math.floor(Math.random() * 5000) + 200; // Between 200MB and 5GB
+            let speed = (Math.random() * 20 + 5).toFixed(2);
+            let source = `192.168.1.${Math.floor(Math.random() * 255)}`;
+            let destination = `203.0.113.${Math.floor(Math.random() * 255)}`;
+            completedTransfers.push({
+                file,
+                size,
+                speed,
+                source,
+                destination
+            });
+        }
+
+        function preloadCompletedTransfers() {
+            for (let transfer of completedTransfers) {
+                updateTerminal(`[TRANSFER COMPLETE] [${getTimestamp()}] ${transfer.file}`);
+                updateTerminal(`  - Size: ${formatSize(transfer.size)}`);
+                updateTerminal(`  - Speed: ${transfer.speed} MB/s`);
+                updateTerminal(`  - Source: ${transfer.source}  ->  Destination: ${transfer.destination}`);
+                updateTerminal(`  - ✓ Transfer finished successfully.\n`);
             }
+        }
 
-            let transfer = transfers[index];
-            let currentSpeed = transfer.speed;
-            transfer.progress = 0;
-            transfer.remaining = transfer.size / currentSpeed;
+        let currentTransfer = {};
 
-            updateTerminal(`\nTransfer #${index + 1}: ${transfer.filename}`);
-            updateTerminal(`  Size: ${formatSize(transfer.size)}`);
-            updateTerminal(`  From: ${transfer.source} -> To: ${transfer.destination}`);
-            updateTerminal(`  Base Speed: ${transfer.speed.toFixed(2)} MB/s`);
-            updateTerminal(`  Status: In Progress...\n`);
+        function startNewTransfer() {
+            currentTransfer = {
+                file: getRandomFileName(),
+                size: Math.floor(Math.random() * 7000) + 500, // Between 500MB and 7GB
+                speed: (Math.random() * 15 + 10).toFixed(2),
+                source: `10.0.0.${Math.floor(Math.random() * 255)}`,
+                destination: `198.51.100.${Math.floor(Math.random() * 255)}`,
+                progress: 0,
+                remaining: 0
+            };
 
-            function updateProgress() {
-                if (transfer.progress < 100) {
-                    // Speed fluctuations (±20%)
-                    let speedVariance = (Math.random() * 0.4 - 0.2) * currentSpeed;
-                    currentSpeed = Math.max(0.5, transfer.speed + speedVariance);
+            currentTransfer.remaining = (currentTransfer.size / currentTransfer.speed);
 
-                    // Packet loss (5% chance)
-                    if (Math.random() < 0.05) {
-                        currentSpeed *= 0.5;
-                        updateTerminal(`  ⚠ Packet loss detected. Speed reduced to ${currentSpeed.toFixed(2)} MB/s`);
-                    }
-
-                    // Connection loss (2% chance)
-                    if (Math.random() < 0.02) {
-                        updateTerminal(`  ❌ Connection lost. Reconnecting...`);
-                        setTimeout(updateProgress, 5000); // Pause for 5 seconds
-                        return;
-                    }
-
-                    // Update progress
-                    transfer.progress += (currentSpeed / transfer.size) * 100;
-                    transfer.remaining = Math.max(0, transfer.remaining - 1);
-
-                    // Generate progress bar
-                    let bar = "[" + "=".repeat(Math.floor(transfer.progress / 5)) + " ".repeat(20 - Math.floor(transfer.progress / 5)) + "]";
-                    updateTerminal(`  ${bar} ${transfer.progress.toFixed(1)}% - ETA: ${formatTime(transfer.remaining)}`);
-
-                    setTimeout(updateProgress, 1000);
-                } else {
-                    updateTerminal(`  ✅ ${transfer.filename} - Completed!`);
-                    startTransfers(index + 1); // Start next transfer after this one finishes
-                }
-            }
+            updateTerminal(`\n[TRANSFER IN PROGRESS] [${getTimestamp()}] ${currentTransfer.file}`);
+            updateTerminal(`  - Size: ${formatSize(currentTransfer.size)}`);
+            updateTerminal(`  - Source: ${currentTransfer.source}  ->  Destination: ${currentTransfer.destination}`);
+            updateTerminal(`  - Base Speed: ${currentTransfer.speed} MB/s`);
+            updateTerminal(`  - Status: Beginning transfer...`);
 
             updateProgress();
         }
 
+        function updateProgress() {
+            if (currentTransfer.progress < 100) {
+                let speedVariance = (Math.random() * 0.4 - 0.2) * currentTransfer.speed;
+                let currentSpeed = Math.max(0.5, parseFloat(currentTransfer.speed) + speedVariance);
+                let jitter = (Math.random() * 10).toFixed(2);
+                let latency = (Math.random() * 100 + 20).toFixed(2);
+                
+                currentTransfer.progress += (currentSpeed / currentTransfer.size) * 100;
+                currentTransfer.remaining = Math.max(0, currentTransfer.remaining - 1);
+
+                let barProgress = Math.floor(currentTransfer.progress / 5);
+                let bar = "[" + "=".repeat(barProgress) + " ".repeat(20 - barProgress) + "]";
+
+                let progressText = 
+                    `  ${bar} ${currentTransfer.progress.toFixed(1)}% ` +
+                    `| Speed: ${currentSpeed.toFixed(2)} MB/s ` +
+                    `| ETA: ${formatTime(currentTransfer.remaining)} ` +
+                    `| Jitter: ${jitter}ms ` +
+                    `| Latency: ${latency}ms`;
+
+                let terminal = document.getElementById("terminal-output");
+                let lines = terminal.innerHTML.split("\n");
+                lines[lines.length - 1] = progressText;
+                terminal.innerHTML = lines.join("\n");
+                terminal.scrollTop = terminal.scrollHeight;
+
+                setTimeout(updateProgress, 1000);
+            } else {
+                updateTerminal(`  ✓ [${getTimestamp()}] ${currentTransfer.file} - Transfer Complete!`);
+                setTimeout(startNewTransfer, 2000); // Wait 2 seconds before starting next transfer
+            }
+        }
+
         setTimeout(() => {
-            updateTerminal("\nTransfers initialized. Starting now...\n");
-            startTransfers();
-        }, 2000);
+            preloadCompletedTransfers();
+            startNewTransfer();
+        }, 1000);
     </script>
 
 </body>
