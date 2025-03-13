@@ -44,24 +44,34 @@
             return new Date().toISOString().split("T")[1].split(".")[0]; // HH:MM:SS format
         }
 
-        function updateTerminal(text) {
-            document.body.innerHTML += text + "\n";
+        function updateTerminal(text, overwrite = false) {
+            let terminal = document.body;
+            if (overwrite) {
+                let lines = terminal.innerHTML.split("\n");
+                lines[lines.length - 1] = text;
+                terminal.innerHTML = lines.join("\n");
+            } else {
+                terminal.innerHTML += text + "\n";
+            }
             window.scrollTo(0, document.body.scrollHeight);
         }
 
-        // Generate some completed transfers
         function preloadCompletedTransfers() {
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 3; i++) {
                 let file = getRandomFileName();
                 let size = Math.floor(Math.random() * 5000) + 200; // Between 200MB and 5GB
                 let speed = (Math.random() * 20 + 5).toFixed(2);
                 let source = `192.168.1.${Math.floor(Math.random() * 255)}`;
                 let destination = `203.0.113.${Math.floor(Math.random() * 255)}`;
+                let hash = Math.random().toString(36).substring(2, 10).toUpperCase();
+                let checksum = Math.random().toString(16).substring(2, 10).toUpperCase();
 
                 updateTerminal(`[TRANSFER COMPLETE] [${getTimestamp()}] ${file}`);
                 updateTerminal(`  - Size: ${formatSize(size)}`);
                 updateTerminal(`  - Speed: ${speed} MB/s`);
                 updateTerminal(`  - Source: ${source}  ->  Destination: ${destination}`);
+                updateTerminal(`  - SHA-256 Checksum: ${checksum}`);
+                updateTerminal(`  - Network Packet Integrity: 99.98%`);
                 updateTerminal(`  - ✓ Transfer finished successfully.\n`);
             }
         }
@@ -85,8 +95,7 @@
             updateTerminal(`  - Size: ${formatSize(currentTransfer.size)}`);
             updateTerminal(`  - Source: ${currentTransfer.source}  ->  Destination: ${currentTransfer.destination}`);
             updateTerminal(`  - Base Speed: ${currentTransfer.speed} MB/s`);
-            updateTerminal(`  - Status: Beginning transfer...`);
-
+            updateTerminal(`  - Status: Establishing secure connection...`);
             updateProgress();
         }
 
@@ -96,22 +105,33 @@
                 let currentSpeed = Math.max(0.5, parseFloat(currentTransfer.speed) + speedVariance);
                 let jitter = (Math.random() * 10).toFixed(2);
                 let latency = (Math.random() * 100 + 20).toFixed(2);
+                let cpuLoad = (Math.random() * 20 + 30).toFixed(1);
+                let diskIO = (Math.random() * 200 + 50).toFixed(2);
+                let packetLoss = (Math.random() * 0.5).toFixed(2);
+                let encryption = Math.random() > 0.5 ? "AES-256" : "ChaCha20";
 
                 currentTransfer.progress += (currentSpeed / currentTransfer.size) * 100;
                 currentTransfer.remaining = Math.max(0, currentTransfer.remaining - 1);
 
+                let barProgress = Math.floor(currentTransfer.progress / 5);
+                let bar = "[" + "=".repeat(barProgress) + " ".repeat(20 - barProgress) + "]";
+
                 let progressText =
-                    `  Progress: ${currentTransfer.progress.toFixed(1)}% ` +
+                    `[${getTimestamp()}] TRANSFER ${currentTransfer.progress.toFixed(1)}% ` +
                     `| Speed: ${currentSpeed.toFixed(2)} MB/s ` +
                     `| ETA: ${formatTime(currentTransfer.remaining)} ` +
+                    `| CPU Load: ${cpuLoad}% ` +
+                    `| Disk I/O: ${diskIO} MB/s ` +
+                    `| Packet Loss: ${packetLoss}% ` +
+                    `| Encryption: ${encryption} ` +
                     `| Jitter: ${jitter}ms ` +
                     `| Latency: ${latency}ms`;
 
-                updateTerminal(progressText);
+                updateTerminal(progressText, true);
 
                 setTimeout(updateProgress, 1000);
             } else {
-                updateTerminal(`  ✓ [${getTimestamp()}] ${currentTransfer.file} - Transfer Complete!\n`);
+                updateTerminal(`\n✓ [${getTimestamp()}] ${currentTransfer.file} - Transfer Complete!`);
                 setTimeout(startNewTransfer, 2000); // Wait 2 seconds before next transfer
             }
         }
