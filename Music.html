@@ -8,11 +8,9 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #222, #444);
-            color: white;
             margin: 0;
             padding: 0;
-            transition: background 1s ease-in-out;
+            transition: background 1s ease-in-out, color 0.5s ease;
         }
         .container {
             padding: 20px;
@@ -126,6 +124,7 @@
             document.getElementById("song-name").textContent = track.name;
             document.getElementById("artist-name").textContent = track.artist;
             document.getElementById("album-art").src = track.albumArt;
+            updateBackground(track.albumArt);
         }
     
         function updateTrackList(tracks) {
@@ -140,7 +139,16 @@
                 text.textContent = `${tracks[i].artist["#text"]} - ${tracks[i].name}`;
                 li.appendChild(img);
                 li.appendChild(text);
+                li.style.background = `url(${tracks[i].image[2]["#text"]}) center/cover`;
+                li.style.color = "white";
                 trackList.appendChild(li);
+            }
+        }
+
+        function updateBackground(imageUrl) {
+            if (imageUrl) {
+                document.body.style.background = `url(${imageUrl}) center/cover`;
+                setButtonColor();
             }
         }
 
@@ -174,14 +182,8 @@
         }
 
         function setButtonColor() {
-            const computedBackground = window.getComputedStyle(document.body).backgroundImage;
-            const hexMatch = computedBackground.match(/#([0-9a-fA-F]{6})/);
-            let backgroundColor = "#444"; // Default
-            if (hexMatch) {
-                backgroundColor = hexMatch[0];
-            }
-
-            const complement = getComplementaryColor(backgroundColor);
+            const bodyBgColor = window.getComputedStyle(document.body).backgroundColor;
+            const complement = getComplementaryColor(bodyBgColor);
             const contrast = getContrastColor(complement);
 
             const button = document.querySelector(".project-card");
