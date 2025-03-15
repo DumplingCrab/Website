@@ -8,42 +8,69 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #222;
+            background: linear-gradient(135deg, #222, #444);
             color: white;
+            margin: 0;
+            padding: 0;
+            transition: background 1s ease-in-out;
+        }
+        .container {
+            padding: 20px;
         }
         .track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
             margin: 20px auto;
-            padding: 10px;
-            width: 300px;
-            background: #333;
-            border-radius: 10px;
+            padding: 15px;
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            transition: all 0.5s ease;
         }
-        img {
+        .track img {
             width: 100%;
             border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
         ul {
             list-style: none;
             padding: 0;
+            max-width: 400px;
+            margin: auto;
         }
         li {
-            background: #444;
-            margin: 5px;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 10px;
             padding: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        li img {
+            width: 50px;
+            height: 50px;
             border-radius: 5px;
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Now Playing</h1>
-    <div id="current-track" class="track">
-        <img id="album-art" src="" alt="Album Art">
-        <h2 id="song-name">Loading...</h2>
-        <p id="artist-name"></p>
-    </div>
+    <div class="container">
+        <h1>Now Playing</h1>
+        <div id="current-track" class="track">
+            <img id="album-art" src="" alt="Album Art">
+            <h2 id="song-name">Loading...</h2>
+            <p id="artist-name"></p>
+        </div>
 
-    <h2>Last 10 Tracks</h2>
-    <ul id="track-list"></ul>
+        <h2>Last 10 Tracks</h2>
+        <ul id="track-list"></ul>
+    </div>
 
     <script>
         const apiKey = "e6214f51724e2a4b3dcb20f03b0e965c";
@@ -59,16 +86,25 @@
                 if (tracks.length > 0) {
                     // Get most recent track
                     const current = tracks[0];
+                    const albumArt = current.image[3]["#text"] || "default.jpg";
                     document.getElementById("song-name").textContent = current.name;
                     document.getElementById("artist-name").textContent = current.artist["#text"];
-                    document.getElementById("album-art").src = current.image[2]["#text"] || "default.jpg";
+                    document.getElementById("album-art").src = albumArt;
+
+                    // Extract colors and apply theme
+                    applyTheme(albumArt);
 
                     // Populate last 10 tracks
                     const trackList = document.getElementById("track-list");
                     trackList.innerHTML = ""; // Clear existing list
                     for (let i = 1; i < Math.min(tracks.length, 11); i++) {
                         let li = document.createElement("li");
-                        li.textContent = `${tracks[i].artist["#text"]} - ${tracks[i].name}`;
+                        let img = document.createElement("img");
+                        img.src = tracks[i].image[1]["#text"] || "default.jpg";
+                        let text = document.createElement("span");
+                        text.textContent = `${tracks[i].artist["#text"]} - ${tracks[i].name}`;
+                        li.appendChild(img);
+                        li.appendChild(text);
                         trackList.appendChild(li);
                     }
                 }
@@ -77,8 +113,59 @@
             }
         }
 
+        function applyTheme(imageUrl) {
+            if (!imageUrl) return;
+
+            let img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.src = imageUrl;
+            img.onload = function () {
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                let colors = getDominantColors(ctx, img.width, img.height);
+                if (colors.length >= 2) {
+                    let primary = colors[0];
+                    let secondary = colors[1];
+                    let angle = Math.floor(Math.random() * 360);
+                    document.body.style.background = `linear-gradient(${angle}deg, ${primary}, ${secondary})`;
+                    document.querySelectorAll(".track").forEach(track => {
+                        track.style.background = primary;
+                        track.style.border = `2px solid ${secondary}`;
+                        track.style.color = getReadableTextColor(primary);
+                    });
+                }
+            };
+        }
+
+        function getDominantColors(ctx, width, height) {
+            let data = ctx.getImageData(0, 0, width, height).data;
+            let colorMap = {};
+
+            for (let i = 0; i < data.length; i += 4 * 10) { // Sample pixels
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+                let key = `${r},${g},${b}`;
+
+                colorMap[key] = (colorMap[key] || 0) + 1;
+            }
+
+            let sortedColors = Object.keys(colorMap).sort((a, b) => colorMap[b] - colorMap[a]);
+            return sortedColors.slice(0, 2).map(color => `rgb(${color})`);
+        }
+
+        function getReadableTextColor(bgColor) {
+            let rgb = bgColor.match(/\d+/g).map(Number);
+            let brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+            return brightness > 125 ? "black" : "white";
+        }
+
         fetchTracks();
-        setInterval(fetchTracks, 500); // Refresh every 10 seconds
+        setInterval(fetchTracks, 10000); // Refresh every 10 seconds
     </script>
 </body>
 </html>
