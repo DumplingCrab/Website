@@ -42,10 +42,11 @@
         li {
             display: flex;
             align-items: center;
-            margin: 10px;
+            justify-content: space-between;
             padding: 10px;
             border-radius: 10px;
             transition: all 0.3s ease;
+            color: white;
         }
         li img {
             width: 50px;
@@ -129,7 +130,7 @@
 
         function updateTrackList(tracks) {
             const trackList = document.getElementById("track-list");
-            trackList.innerHTML = ""; 
+            trackList.innerHTML = "";
 
             for (let i = 1; i < Math.min(tracks.length, 11); i++) {
                 let li = document.createElement("li");
@@ -140,26 +141,25 @@
                 li.appendChild(img);
                 li.appendChild(text);
                 trackList.appendChild(li);
+
+                img.addEventListener("load", () => extractColors(img, li));
             }
         }
 
-        function extractColors() {
-            const img = document.getElementById("album-art");
+        function extractColors(img, element) {
             const colorThief = new ColorThief();
-
             if (img.complete) {
-                applyGradient(colorThief.getPalette(img, 5));
+                applyGradient(colorThief.getPalette(img, 5), element);
             } else {
                 img.addEventListener("load", () => {
-                    applyGradient(colorThief.getPalette(img, 5));
+                    applyGradient(colorThief.getPalette(img, 5), element);
                 });
             }
         }
 
-        function applyGradient(colors) {
+        function applyGradient(colors, element) {
             if (!colors || colors.length < 2) return;
 
-            // Sort colors by brightness to get two differentiable ones
             colors.sort((a, b) => {
                 return (b[0] + b[1] + b[2]) - (a[0] + a[1] + a[2]);
             });
@@ -167,19 +167,8 @@
             const color1 = `rgb(${colors[0][0]}, ${colors[0][1]}, ${colors[0][2]})`;
             const color2 = `rgb(${colors[colors.length - 1][0]}, ${colors[colors.length - 1][1]}, ${colors[colors.length - 1][2]})`;
 
-            document.body.style.background = `linear-gradient(135deg, ${color1}, ${color2})`;
-
-            setButtonColor(color1, color2);
-        }
-
-        function setButtonColor(color1, color2) {
-            const button = document.querySelector(".project-card");
-            if (!button) return;
-
-            const contrastColor = getContrastColor(color1, color2);
-            button.style.background = contrastColor;
-            button.style.color = contrastColor === "black" ? "white" : "black";
-            button.style.borderColor = contrastColor;
+            element.style.background = `linear-gradient(135deg, ${color1}, ${color2})`;
+            element.style.color = getContrastColor(color1, color2);
         }
 
         function getContrastColor(color1, color2) {
@@ -211,7 +200,7 @@
             });
         });
 
-        document.getElementById("album-art").addEventListener("load", extractColors);
+        document.getElementById("album-art").addEventListener("load", () => extractColors(document.getElementById("album-art"), document.body));
     </script>
 </body>
 </html>
