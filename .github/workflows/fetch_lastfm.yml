@@ -1,32 +1,67 @@
-name: Fetch Last.fm Data
+name: Update Last.fm Tracks
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs at midnight UTC every day
-  workflow_dispatch: # Allows manual runs
+    - cron: "*/10 * * * *"  # Runs every 10 minutes
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   update-tracks:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "20"
 
-      - name: Install dependencies
-        run: npm install axios fs
+      - name: Install Dependencies
+        run: npm install node-fetch
 
       - name: Fetch Last.fm Data
-        run: node fetch_tracks.js
+        run: |
+          echo "Fetching recent tracks..."
+          cat << 'EOF' > fetch_tracks.js
+          const fs = require('fs');
+          const fetch = require('node-fetch');
 
-      - name: Commit and Push Data
+          const apiKey = "e6214f51724e2a4b3dcb20f03b0e965c";
+          const username = "DumplingCrab";
+          const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${apiKey}&format=json`;
+
+          async function fetchTracks() {
+              try {
+                  const response = await fetch(url);
+                  const data = await response.json();
+                  const tracks = data.recenttracks.track.map(track => ({
+                      name: track.name,
+                      artist: track.artist["#text"],
+                      albumArt: track.image[3]["#text"] || "default.jpg",
+                      timestamp: track.date ? track.date.uts : "now"
+                  }));
+
+                  fs.writeFileSync("data/tracks.json", JSON.stringify(tracks, null, 2));
+                  console.log("Updated tracks.json");
+              } catch (error) {
+                  console.error("Error fetching data:", error);
+                  process.exit(1);
+              }
+          }
+
+          fetchTracks();
+          EOF
+
+          node fetch_tracks.js
+
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          git config --global user.email "github-actions@github.com"
           git add data/tracks.json
-          git commit -m "Update track data from Last.fm"
-          git push
+          git commit -m "Update track data from Last.fm" || exit 0
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/DumplingCrab/Website.git main
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
