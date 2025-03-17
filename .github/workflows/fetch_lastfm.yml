@@ -25,9 +25,12 @@ jobs:
         run: node fetch_tracks.mjs
 
       - name: Commit and Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  # Use the Personal Access Token (PAT)
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/DumplingCrab/Website.git
           git add data/tracks.json
           git commit -m "Update track data from Last.fm" || echo "No changes to commit"
-          git push
+          git push origin main
