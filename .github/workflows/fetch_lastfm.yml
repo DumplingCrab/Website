@@ -24,13 +24,27 @@ jobs:
       - name: Run Fetch Script
         run: node fetch_tracks.mjs
 
+      - name: Authenticate with GitHub App
+        env:
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        run: |
+          echo "$GH_APP_PRIVATE_KEY" > private-key.pem
+          APP_ID=$(jq -r .id private-key.pem)
+          INSTALLATION_ID=$(curl -s -X GET -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $(cat private-key.pem)" \
+            "https://api.github.com/app/installations" | jq -r '.[0].id')
+          TOKEN=$(curl -s -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $(cat private-key.pem)" \
+            "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r '.token')
+          echo "GH_APP_TOKEN=$TOKEN" >> $GITHUB_ENV
+
       - name: Commit and Push Changes
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}  # Use the Personal Access Token
+          GH_APP_TOKEN: ${{ env.GH_APP_TOKEN }}
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/DumplingCrab/Website.git
+          git remote set-url origin https://x-access-token:${GH_APP_TOKEN}@github.com/DumplingCrab/Website.git
           git add data/tracks.json
           git commit -m "Update track data from Last.fm" || echo "No changes to commit"
-          git push origin main
+          git push origin main || (echo "Git push failed!" && exit 1)
