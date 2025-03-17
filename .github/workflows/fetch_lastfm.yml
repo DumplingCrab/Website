@@ -26,11 +26,11 @@ jobs:
 
       - name: Commit and Push Changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  # Use the Personal Access Token (PAT)
+          GH_PAT: ${{ secrets.GH_PAT }}  # Use the Personal Access Token
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/DumplingCrab/Website.git
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/DumplingCrab/Website.git
           git add data/tracks.json
           git commit -m "Update track data from Last.fm" || echo "No changes to commit"
           git push origin main
