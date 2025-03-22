@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Development</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 3rem;
+        }
+        .project-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .project-card {
+            background: #1b1b1b;
+            padding: 15px;
+            border-radius: 10px;
+            width: 200px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+        .project-card:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Boat Hull Recourses</h1>
+    <p>Links </p>
+    
+    <div class="project-container" id="projects">
+        <!-- Blog button will be inserted here dynamically -->
+    </div>
+    
+    <script>
+        const projects = [
+            { name: "Home", link: "https://dumplingcrab.com" },
+            { name: "Design Ratios", link: "https://dumplingcrab.com/Boats/THE-DESIGN-RATIOS.pdf" },
+            { name: "Formulas", link: "Catamaran Design Formulas – CatamaranSite.htmlf" },
+        ];
+        
+        const projectContainer = document.getElementById("projects");
+        
+        projects.forEach(project => {
+            const card = document.createElement("div");
+            card.className = "project-card";
+            card.innerHTML = `<strong>${project.name}</strong>`;
+            card.onclick = () => window.location.href = project.link;
+            projectContainer.appendChild(card);
+        });
+    </script>
+</body>
+</html>
